@@ -317,24 +317,67 @@ If code fails to execute, feedback includes error info:
 ```
 1. Runner loads task
 2. For phase_id in 0..N:
-   a. Send to agent: problem.md, interface, current phase rules
-   b. Loop until valid or max_attempts:
+   a. If phase_id > 0: 
+      - Run implicit evaluation of current code against new phase rules
+      - This does NOT count as an attempt
+   b. Send to agent: problem.md, interface, current phase rules, implicit feedback
+   c. Loop until valid or max_attempts:
       - Receive code from agent
       - Execute evaluator
+      - Increment attempt_id
       - Return feedback JSON
       - If status == "valid": break
-   c. If not valid after max_attempts: task failed
+   d. If not valid after max_attempts: task failed
 3. Output metrics report
 ```
 
-### 6.2 Agent Interface
+### 6.2 Implicit Phase Evaluation
 
-Agent receives per phase:
+When transitioning to a new phase, the runner automatically evaluates the agent's current solution against the new phase rules **without counting it as an attempt**.
+
+This provides the agent with immediate feedback about new constraints while preserving the "surprise" effect of undisclosed requirements.
+
+**Example:** Agent completes phase 2, transitions to phase 3:
+
+```json
+{
+  "task_id": "task_01_normalize_dict",
+  "phase_id": 3,
+  "phase_transition": true,
+  "implicit_evaluation": {
+    "status": "partially_valid",
+    "status_reason": "New phase constraints not satisfied",
+    "violations": [
+      {
+        "rule_id": "handle_none_values",
+        "scope": "nested",
+        "count": 5
+      }
+    ],
+    "summary": {
+      "rules_total": 5,
+      "rules_passed": 4,
+      "rules_failed": 1,
+      "coverage": 0.78
+    }
+  },
+  "problem": "... contents of problem.md ...",
+  "interface": { ... },
+  "rules": [ ... ]
+}
+```
+
+The agent immediately sees how their previous solution performs against new rules and can refine accordingly.
+
+### 6.3 Agent Interface
+
+Agent receives per attempt:
 
 ```json
 {
   "task_id": "task_01_normalize_dict",
   "phase_id": 1,
+  "phase_transition": false,
   "problem": "... contents of problem.md ...",
   "interface": {
     "function_name": "normalize",
@@ -346,7 +389,7 @@ Agent receives per phase:
     {"id": "no_mutation", "description": "Input dict must not be modified"},
     {"id": "deterministic", "description": "Same input always produces same output"}
   ],
-  "previous_feedback": { ... }  // null for first attempt
+  "previous_feedback": { ... }  // null for first attempt in phase
 }
 ```
 
