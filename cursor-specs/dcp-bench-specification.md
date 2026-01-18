@@ -1,505 +1,513 @@
 # Dynamic Coding Problems Benchmark (DCP-Bench)
-## Technical Specification
+## Technical Specification v1.0 (MVP)
 
 ## 1. Goal
 
 DCP-Bench evaluates how efficiently an LLM or agent system can produce correct code when:
 
 - the problem specification is revealed over multiple phases,
-- correctness constraints grow or become stricter over phases,
-- after each submitted attempt the agent receives structured, information-rich evaluation feedback (not merely pass/fail),
-- the agent must use that feedback to refine hypotheses and converge to a fully valid solution.
-
-The benchmark must allow comparing:
-
-- different LLMs,
-- different agent architectures,
-- different tool-using pipelines,
-
-using the same tasks and evaluation protocol.
+- correctness constraints grow stricter over phases,
+- after each submitted attempt the agent receives structured feedback,
+- the agent must use that feedback to converge to a valid solution.
 
 ---
 
-## 2. Key Requirement: Structured Feedback Per Attempt
+## 2. Core Concepts
 
-### 2.1 Mandatory property
+### 2.1 Task
 
-For every attempt submitted by the agent, the evaluator MUST return a JSON feedback object that includes:
+A **task** is a single coding problem with multiple phases. Each task has:
+- a problem description
+- a required function signature
+- a set of phases with evolving rules
 
-- a validity state (`valid` / `partially_valid` / `invalid`),
-- a list of rule violations with counts and scopes,
-- a quantitative coverage score (0.0–1.0),
-- invariant satisfaction counts,
-- deltas vs the previous attempt.
+### 2.2 Phase
+
+A **phase** is a stage of a task with a fixed set of rules. Rules only grow stricter across phases:
+
+```
+ValidSolutions₀ ⊇ ValidSolutions₁ ⊇ ... ⊇ ValidSolutionsₙ
+```
+
+### 2.3 Rule
+
+A **rule** is a named correctness constraint (e.g., "no_input_mutation", "deterministic_output").
+
+Rules are checked by the evaluator. The agent sees rule names and descriptions but not the test cases.
+
+### 2.4 Attempt
+
+An **attempt** is a single code submission by the agent. Each attempt produces one feedback response.
+
+### 2.5 Scope
+
+A **scope** is a category label for where a rule violation occurred (e.g., "nested_objects", "edge_cases"). Scopes help the agent understand failure patterns without revealing specific test inputs.
 
 ---
 
-## 3. Entities and Definitions
-
-This section defines all key terms used in DCP-Bench.
-
-### 3.1 Attempt
-
-An **attempt** is a single submission of a solution artifact (code) by the agent for evaluation in the current phase.
-
-- Each attempt produces exactly one feedback object.
-
-### 3.2 Phase
-
-A **phase** is a discrete stage of a task during which a fixed set of rules must be satisfied.
-
-- Across phases, rules evolve (see Section 4). During one phase, rules are constant.
-
-### 3.3 Rule
-
-A **rule** is a named correctness constraint with stable identifier `rule_id`.
-
-A rule is **not** a test. A rule is a semantic constraint such as:
-
-- "do not mutate input"
-- "output must include same keys"
-- "must be deterministic"
-- "idempotent behavior"
-
-Rules are evaluated by running tests, but the agent is not exposed to tests.
-
-### 3.4 Rule Scope
-
-A **scope** is a coarse category describing where a rule is violated, without revealing concrete test inputs.
-
-Scope must not identify specific failing cases; it must be a bucket label such as:
-
-- `"top_level"`
-- `"nested_dicts"`
-- `"lists"`
-- `"float_values"`
-- `"tie_breaking"`
-- `"dependency_graph"`
-
-Each task defines allowed scope values per rule.
-
-### 3.5 Invariant
-
-An **invariant** is an implicit correctness property not necessarily disclosed to the agent, used to prevent gaming and enforce robustness.
-
-Invariants are evaluated by hidden tests or by evaluator instrumentation.
-
-Invariants must be expressed as:
-
-- boolean checks, or
-- property-based checks.
-
-Agents are not told the exact invariant logic.
-
----
-
-## 4. Rule Evolution Across Phases
-
-### 4.1 Mandatory constraint growth
-
-Each phase MUST introduce at least one new constraint or make a previous constraint strictly stricter.
-
-Formally, the set of valid programs must shrink:
+## 3. Task Structure
 
 ```
-ValidSolutions₀ ⊃ ValidSolutions₁ ⊃ ... ⊃ ValidSolutionsₙ
+tasks/
+└── task_01_example/
+    ├── task.yaml        # task metadata + phases + rules
+    ├── problem.md       # agent-visible problem description
+    ├── evaluator.py     # evaluation logic
+    └── tests.py         # test cases (not agent-visible)
 ```
 
-### 4.2 Optional partial rule modification
+### 3.1 task.yaml
 
-A phase may modify an earlier rule.
-
-A modification is allowed only if it does not expand the valid solution space.
-
-**Allowed modification types:**
-
-- `narrow_scope`: rule applies to fewer places but becomes stricter where it applies
-- `add_condition`: rule requires additional condition
-- `change_semantics_stricter`: semantics change such that fewer solutions remain valid
-- `split_rule`: one rule becomes two rules, both required
-
-**Forbidden modifications:**
-
-- removing a rule
-- weakening a rule
-- adding exceptions that expand valid solution space
-
----
-
-## 5. Task Packaging (Repository Layout)
-
-Each task is a directory with the following required files:
-
-```
-task_xx_name/
-├── problem.md
-├── interface.md
-├── phases.yaml
-├── evaluator.py
-├── hidden_rules.py
-├── tests_public.py
-├── tests_hidden.py
-└── generator.md
-```
-
-### 5.1 problem.md (agent-visible)
-
-**Must describe:**
-
-- the domain and goal,
-- input/output types,
-- minimal examples (optional),
-- statement that requirements evolve across phases.
-
-**Must not include:**
-
-- hidden rules or invariants,
-- evaluator internals,
-- test cases beyond small illustrative examples (optional).
-
-### 5.2 interface.md (agent-visible)
-
-**Must specify:**
-
-- exact function signature,
-- allowed imports (if any),
-- runtime constraints (time/memory),
-- determinism requirements,
-- forbidden behaviors (global state, randomness).
-
-### 5.3 phases.yaml (agent-visible)
-
-Defines phases and rule evolution.
-
-**Schema:**
+Complete task definition including phases and rules.
 
 ```yaml
+id: "task_01_normalize_dict"
+name: "Normalize Dictionary"
+description: "Transform nested dictionaries according to rules"
+
+interface:
+  function_name: "normalize"
+  signature: "def normalize(data: dict) -> dict"
+  allowed_imports: ["copy", "collections"]
+
+execution:
+  timeout_seconds: 30  # safety limit to prevent infinite loops
+
 phases:
-  - id: <int starting from 0>
-    added_rules:
-      - <rule_id>
-      - <rule_id>
-    modified_rules:
-      - rule_id: <rule_id>
-        modification_type: <one of allowed modification types>
-        details: <string, human-readable, agent-visible>
+  - id: 0
+    description: "Basic normalization"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected structure"
+        scopes: ["flat", "nested", "empty"]
+      - id: "no_mutation"
+        description: "Input dict must not be modified"
+        scopes: ["direct", "nested"]
+
+  - id: 1
+    description: "Handle edge cases"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected structure"
+        scopes: ["flat", "nested", "empty", "circular_refs", "large_depth"]
+      - id: "no_mutation"
+        description: "Input dict must not be modified"
+        scopes: ["direct", "nested"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["dict_ordering", "float_precision"]
+
+limits:
+  max_attempts_per_phase: 10
+  max_total_attempts: 50
 ```
 
-**Rules:**
+### 3.2 problem.md (agent-visible)
 
-- `added_rules` MUST be non-empty for every phase after phase 0.
-- `modified_rules` may be empty.
-- `details` must be descriptive but must not reveal hidden tests.
+```markdown
+# Normalize Dictionary
 
-### 5.4 evaluator.py (not agent-visible)
+## Problem
+Implement a function that normalizes a nested dictionary...
 
-**Implements:**
+## Input
+- `data`: a dictionary (may be nested)
 
-- loading solution code safely,
-- running rule checks for current phase,
-- running invariant checks,
-- computing coverage,
-- computing delta vs previous attempt.
+## Output
+- A new dictionary with normalized structure
 
-### 5.5 hidden_rules.py (not agent-visible)
+## Notes
+- Requirements become stricter in later phases
+- Do not modify the input
+```
 
-Defines invariants and hidden constraints to prevent trivial hacking.
+### 3.3 evaluator.py
 
-### 5.6 tests_public.py / tests_hidden.py (not agent-visible by default)
+```python
+from typing import Any
+from dcp_bench.evaluator import BaseEvaluator, RuleResult
 
-Both are evaluator-run tests:
+class Evaluator(BaseEvaluator):
+    def check_correct_output(self, solution_fn, test_case) -> RuleResult:
+        """Check if output matches expected."""
+        result = solution_fn(test_case.input)
+        if result == test_case.expected:
+            return RuleResult.passed()
+        return RuleResult.failed(scope=self.classify_scope(test_case))
+    
+    def check_no_mutation(self, solution_fn, test_case) -> RuleResult:
+        """Check if input was mutated."""
+        import copy
+        original = copy.deepcopy(test_case.input)
+        solution_fn(test_case.input)
+        if test_case.input == original:
+            return RuleResult.passed()
+        return RuleResult.failed(scope="direct" if is_direct else "nested")
+    
+    def check_deterministic(self, solution_fn, test_case) -> RuleResult:
+        """Check if function is deterministic."""
+        results = [solution_fn(copy.deepcopy(test_case.input)) for _ in range(3)]
+        if all(r == results[0] for r in results):
+            return RuleResult.passed()
+        return RuleResult.failed(scope="dict_ordering")
+```
 
-- **public tests**: smoke / sanity / format checks
-- **hidden tests**: comprehensive checks, invariants, edge cases
+### 3.4 tests.py
 
-Agents do not see tests in official benchmark runs.
+```python
+from dcp_bench.testing import TestCase
 
-### 5.7 generator.md (for benchmark maintainers)
-
-Instructions to generate additional tasks with LLMs in a consistent style.
+TEST_CASES = [
+    TestCase(
+        input={"a": 1, "b": 2},
+        expected={"a": 1, "b": 2},
+        phase=0,
+        tags=["flat"]
+    ),
+    TestCase(
+        input={"a": {"b": {"c": 1}}},
+        expected={"a": {"b": {"c": 1}}},
+        phase=0,
+        tags=["nested"]
+    ),
+    # Phase 1 adds more edge cases
+    TestCase(
+        input=create_deep_dict(depth=100),
+        expected=...,
+        phase=1,
+        tags=["large_depth"]
+    ),
+]
+```
 
 ---
 
-## 6. Evaluation Protocol
+## 4. Feedback Schema
 
-### 6.1 Inputs to the agent
-
-For each phase, the agent is given:
-
-- `problem.md`
-- `interface.md`
-- current phase rule information from `phases.yaml` (added + modified)
-- its own previous attempt(s) if the agent stores them (benchmark does not provide memory)
-
-**The agent is NOT given:**
-
-- tests,
-- failing inputs,
-- stack traces,
-- hidden rules.
-
-### 6.2 Agent outputs
-
-For each attempt, the agent outputs a single code artifact containing the required function.
-
-### 6.3 Evaluator outputs to the agent (structured feedback)
-
-For each attempt, the evaluator returns a JSON feedback object (Section 7).
-
-This is the only feedback channel.
-
----
-
-## 7. Feedback Schema (Complete Semantics)
-
-### 7.1 Canonical JSON Schema
+Every attempt returns this JSON structure:
 
 ```json
 {
-  "phase_id": 2,
-  "attempt_id": 7,
-
-  "status": "valid",
-  "status_reason": "string",
-
+  "phase_id": 1,
+  "attempt_id": 5,
+  "status": "partially_valid",
+  "status_reason": "Fails determinism checks on dictionary ordering",
+  
   "violations": [
     {
-      "rule_id": "determinism",
-      "scope": "dict_order",
-      "count": 3,
-      "severity": "error"
+      "rule_id": "deterministic",
+      "scope": "dict_ordering",
+      "count": 3
     }
   ],
-
-  "rule_summary": {
-    "rules_total": 5,
-    "rules_satisfied": 4,
-    "rules_violated": 1
+  
+  "summary": {
+    "rules_total": 3,
+    "rules_passed": 2,
+    "rules_failed": 1,
+    "coverage": 0.85
   },
-
-  "validity_coverage": {
-    "value": 0.82,
-    "definition": "fraction of evaluation cases in this phase where all phase rules are satisfied"
-  },
-
-  "invariants": {
-    "checked": 6,
-    "satisfied": 5,
-    "violated": 1
-  },
-
-  "delta_from_previous": {
-    "previous_attempt_id": 6,
-    "coverage_delta": 0.12,
-    "improved_rules": ["normalize_numbers"],
-    "regressed_rules": []
+  
+  "delta": {
+    "coverage_change": 0.15,
+    "new_failures": [],
+    "fixed_failures": ["no_mutation"]
   }
 }
 ```
 
-### 7.2 Field-by-field definitions (no ambiguity)
+### 4.1 Field Definitions
 
-#### phase_id (integer)
+| Field | Type | Description |
+|-------|------|-------------|
+| `phase_id` | int | Current phase (0-indexed) |
+| `attempt_id` | int | Attempt number within task |
+| `status` | enum | `"valid"` / `"partially_valid"` / `"invalid"` / `"error"` |
+| `status_reason` | string | Human-readable explanation |
+| `violations` | array | List of rule violations |
+| `violations[].rule_id` | string | Which rule was violated |
+| `violations[].scope` | string | Category of failure |
+| `violations[].count` | int | Number of test cases that failed |
+| `summary.rules_total` | int | Total rules in current phase |
+| `summary.rules_passed` | int | Rules with zero violations |
+| `summary.rules_failed` | int | Rules with at least one violation |
+| `summary.coverage` | float | Fraction of test cases passing all rules (0.0-1.0) |
+| `delta.coverage_change` | float | Coverage difference from previous attempt (null if first) |
+| `delta.new_failures` | array | Rules that regressed |
+| `delta.fixed_failures` | array | Rules that improved |
 
-Current phase index being evaluated (0-based).
+### 4.2 Status Values
 
-#### attempt_id (integer)
+- `valid` — All rules pass, ready to advance to next phase
+- `partially_valid` — Some rules pass, some fail
+- `invalid` — Critical failures (e.g., wrong return type, crashes)
+- `error` — Code failed to execute (syntax error, timeout, exception)
 
-Monotonic attempt number within the entire task run.
+### 4.3 Error Handling
 
-#### status (string enum)
-
-One of:
-
-- `valid`: the attempt satisfies ALL phase rules AND all invariants checked for this phase
-- `partially_valid`: the attempt satisfies some rules but not all; may still satisfy invariants
-- `invalid`: the attempt violates core rules OR triggers fatal invariant violations
-
-Status MUST be consistent with violations:
-
-- If any `severity="error"` violation exists, status cannot be `valid`.
-
-#### status_reason (string)
-
-Human-readable, high-level reason without giving away test cases.
-
-**Examples:**
-
-- "Violates determinism under dictionary traversal."
-- "Fails idempotency checks under repeated application."
-
-Must not mention specific inputs or provide stack traces.
-
-#### violations (list)
-
-Each element describes one class of violation.
-
-**Fields:**
-
-- `rule_id`: stable identifier from task rules
-- `scope`: coarse bucket label defined by the task author
-- `count`: number of evaluation cases (out of the evaluator's internal case set) that violated this rule in this scope
-- `severity`: enum `error` | `warning`
-
-**Rules:**
-
-- An `error` indicates a strict violation affecting validity.
-- A `warning` indicates non-fatal issues (e.g., suboptimal stability) and must not prevent `valid` unless configured by the task.
-
-#### rule_summary (object)
-
-- `rules_total`: number of phase rules evaluated (including modified ones)
-- `rules_satisfied`: count of rules fully satisfied across evaluator internal case set
-- `rules_violated`: count of rules that had at least one error violation
-
-**Consistency constraint:**
-
-```
-rules_satisfied + rules_violated == rules_total
-```
-
-#### validity_coverage (object)
-
-- `value`: float in [0.0, 1.0]
-- `definition`: task-provided string defining how coverage is computed
-
-**Canonical definition for all tasks:**
-
-> Coverage is the fraction of evaluation cases for the current phase for which the solution satisfies ALL phase rules.
-
-**Important:**
-
-- Coverage must be computed over a fixed internal set of evaluation cases for the phase.
-- The internal set must be deterministic (seeded).
-
-#### invariants (object)
-
-- `checked`: number of invariants evaluated
-- `satisfied`: number satisfied
-- `violated`: number violated
-
-Invariant failures can affect status:
-
-- If any invariant is designated "fatal" in `hidden_rules.py`, status MUST be `invalid`.
-
-#### delta_from_previous (object)
-
-Compares current attempt to previous attempt.
-
-**Fields:**
-
-- `previous_attempt_id`: integer or null (null for first attempt)
-- `coverage_delta`: `current_coverage - previous_coverage`
-- `improved_rules`: list of `rule_id`s whose violation count decreased
-- `regressed_rules`: list of `rule_id`s whose violation count increased
-
-**Important:**
-
-- Delta must be computed using the same evaluation case sets.
-- If previous attempt does not exist, `coverage_delta` must be `null` and lists empty.
-
----
-
-## 8. Coverage Computation Requirements
-
-To avoid gaming and ambiguity:
-
-1. Each phase defines a **deterministic set of evaluation cases**:
-   - mixture of public-like and hidden-like cases
-   - not revealed to agent
-
-2. Coverage is computed as:
-
-```
-coverage = (# cases passing all rules) / (total cases)
-```
-
-3. The evaluator must log:
-   - total case count per phase
-   - seed used
-   - case generation method (for maintainers)
-
-4. Agents never see these details.
-
----
-
-## 9. Standard Runner Requirements
-
-A benchmark runner must:
-
-1. Load a task
-
-2. For each phase:
-   - reveal phase rules to agent
-   - accept agent attempts
-   - run evaluator for each attempt
-   - return structured feedback
-
-3. Collect metrics:
-   - attempts to valid per phase
-   - final validity
-   - regressions
-   - cumulative attempts
-
----
-
-## 10. Standard Metrics Report
-
-The runner must output a JSON report:
+If code fails to execute, feedback includes error info:
 
 ```json
 {
-  "task_id": "task_03_progressive_optimization",
-  "agent_id": "claude_code_4_5",
+  "status": "error",
+  "status_reason": "Runtime error: maximum recursion depth exceeded",
+  "error": {
+    "type": "RecursionError",
+    "message": "maximum recursion depth exceeded",
+    "phase": "execution"
+  },
+  "violations": [],
+  "summary": {
+    "rules_total": 3,
+    "rules_passed": 0,
+    "rules_failed": 0,
+    "coverage": 0.0
+  },
+  "delta": null
+}
+```
+
+---
+
+## 5. Runner Protocol
+
+### 5.1 Session Flow
+
+```
+1. Runner loads task
+2. For phase_id in 0..N:
+   a. Send to agent: problem.md, interface, current phase rules
+   b. Loop until valid or max_attempts:
+      - Receive code from agent
+      - Execute evaluator
+      - Return feedback JSON
+      - If status == "valid": break
+   c. If not valid after max_attempts: task failed
+3. Output metrics report
+```
+
+### 5.2 Agent Interface
+
+Agent receives per phase:
+
+```json
+{
+  "task_id": "task_01_normalize_dict",
+  "phase_id": 1,
+  "problem": "... contents of problem.md ...",
+  "interface": {
+    "function_name": "normalize",
+    "signature": "def normalize(data: dict) -> dict",
+    "allowed_imports": ["copy", "collections"]
+  },
+  "rules": [
+    {"id": "correct_output", "description": "Output matches expected structure"},
+    {"id": "no_mutation", "description": "Input dict must not be modified"},
+    {"id": "deterministic", "description": "Same input always produces same output"}
+  ],
+  "previous_feedback": { ... }  // null for first attempt
+}
+```
+
+Agent responds with:
+
+```json
+{
+  "code": "def normalize(data: dict) -> dict:\n    import copy\n    ..."
+}
+```
+
+---
+
+## 6. Metrics Report
+
+After task completion, runner outputs:
+
+```json
+{
+  "task_id": "task_01_normalize_dict",
+  "agent_id": "gpt-4-turbo",
+  "timestamp": "2025-01-18T12:00:00Z",
+  
   "phases": [
     {
       "phase_id": 0,
-      "attempts_to_valid": 2,
-      "best_coverage": 1.0
+      "status": "valid",
+      "attempts": 2,
+      "final_coverage": 1.0,
+      "duration_seconds": 45.2
+    },
+    {
+      "phase_id": 1,
+      "status": "valid", 
+      "attempts": 5,
+      "final_coverage": 1.0,
+      "duration_seconds": 120.8
     }
   ],
+  
   "overall": {
-    "total_attempts": 17,
-    "final_status": "valid",
-    "total_regressions": 3
+    "status": "completed",
+    "total_attempts": 7,
+    "total_phases": 2,
+    "phases_completed": 2,
+    "total_duration_seconds": 166.0
   }
 }
 ```
 
 ---
 
-## 11. Anti-Gaming Requirements
+## 7. Implementation Checklist (MVP)
 
-Tasks must include at least one invariant to prevent trivial strategies, such as:
+### 7.1 Core Components
 
-- hardcoding outputs for known examples
-- using introspection to access file system / tests
-- relying on non-determinism
-- time-based behavior
+- [ ] **Task Loader** — Parse `task.yaml`, load evaluator and tests
+- [ ] **Evaluator Base Class** — Abstract class with rule checking interface
+- [ ] **Runner** — Orchestrate phases, attempts, feedback loop
+- [ ] **Sandbox** — Execute agent code safely (safety timeout, import restrictions)
+- [ ] **Metrics Collector** — Track attempts, coverage, generate report
 
-The evaluator must sandbox execution and restrict imports as needed.
+### 7.2 File Structure
+
+```
+dcp_bench/
+├── __init__.py
+├── runner.py           # Main benchmark runner
+├── evaluator.py        # Base evaluator class
+├── sandbox.py          # Safe code execution
+├── models.py           # Data classes (Feedback, TaskConfig, etc.)
+├── metrics.py          # Metrics collection and reporting
+└── cli.py              # Command-line interface
+
+tasks/
+├── task_01_normalize_dict/
+├── task_02_dependency_sort/
+└── ...
+```
+
+### 7.3 MVP Scope
+
+**Include:**
+- Single-file Python solutions
+- Synchronous evaluation
+- JSON feedback per attempt
+- Basic sandboxing (safety timeout, restricted imports)
+- 2-3 example tasks
+
+**Exclude (post-MVP):**
+- Multi-file solutions
+- Async/parallel evaluation
+- Web UI
+- Automatic task generation
+- Property-based testing integration
 
 ---
 
-## 12. Cursor Implementation Notes (Practical)
+## 8. Example Task: Dependency Sort
 
-For Cursor implementation:
+Complete example to illustrate the spec.
 
-- implement a common runner and task loader
-- implement one evaluator template that tasks subclass
-- require tasks to provide:
-  - rule definitions
-  - case generation seed
-  - allowed scope labels
+### task.yaml
+
+```yaml
+id: "task_02_dependency_sort"
+name: "Dependency Sort"
+description: "Sort items respecting dependencies"
+
+interface:
+  function_name: "sort_dependencies"
+  signature: "def sort_dependencies(items: list[str], deps: dict[str, list[str]]) -> list[str]"
+  allowed_imports: []
+
+execution:
+  timeout_seconds: 30  # safety limit to prevent infinite loops
+
+phases:
+  - id: 0
+    description: "Basic topological sort"
+    rules:
+      - id: "valid_order"
+        description: "Dependencies appear before dependents"
+        scopes: ["linear", "branching"]
+      - id: "complete"
+        description: "All items present in output"
+        scopes: ["all"]
+
+  - id: 1
+    description: "Handle cycles and edge cases"
+    rules:
+      - id: "valid_order"
+        description: "Dependencies appear before dependents"
+        scopes: ["linear", "branching", "complex"]
+      - id: "complete"
+        description: "All items present in output"
+        scopes: ["all"]
+      - id: "cycle_detection"
+        description: "Raise ValueError on circular dependencies"
+        scopes: ["simple_cycle", "indirect_cycle"]
+
+  - id: 2
+    description: "Deterministic tie-breaking"
+    rules:
+      - id: "valid_order"
+        description: "Dependencies appear before dependents"
+        scopes: ["linear", "branching", "complex"]
+      - id: "complete"
+        description: "All items present in output"
+        scopes: ["all"]
+      - id: "cycle_detection"
+        description: "Raise ValueError on circular dependencies"
+        scopes: ["simple_cycle", "indirect_cycle"]
+      - id: "deterministic"
+        description: "Alphabetical order for items with equal priority"
+        scopes: ["tie_breaking"]
+
+limits:
+  max_attempts_per_phase: 10
+  max_total_attempts: 30
+```
+
+### problem.md
+
+```markdown
+# Dependency Sort
+
+## Problem
+Given a list of items and their dependencies, return a sorted list where 
+each item appears after all its dependencies.
+
+## Input
+- `items`: list of unique strings
+- `deps`: dict mapping item -> list of items it depends on
+
+## Output
+- Sorted list of all items
+
+## Example
+```python
+items = ["a", "b", "c"]
+deps = {"b": ["a"], "c": ["b"]}
+# Valid output: ["a", "b", "c"]
+```
+
+## Notes
+- Requirements become stricter in later phases
+- Later phases may require specific error handling
+```
 
 ---
 
-## 13. Minimal Acceptance Criteria for DCP-Bench
+## 9. Acceptance Criteria
 
-DCP-Bench is considered correctly implemented if:
+DCP-Bench MVP is complete when:
 
-1. agents receive structured feedback exactly per schema
-2. phases evolve with non-empty `added_rules`
-3. coverage is deterministic
-4. tasks can be extended by adding phases without breaking runner
-5. multiple agents can be compared using the same metrics report
+1. ✅ Runner can load and execute tasks from `task.yaml`
+2. ✅ Evaluator returns structured JSON feedback per attempt
+3. ✅ Phases progress only when current phase is valid
+4. ✅ Feedback includes violations with rule_id, scope, count
+5. ✅ Coverage is computed deterministically
+6. ✅ Metrics report is generated after task completion
+7. ✅ At least 2 example tasks are implemented
+8. ✅ Agent code is sandboxed (safety timeout, import restrictions)
+9. ✅ Metrics report includes duration per phase and total
