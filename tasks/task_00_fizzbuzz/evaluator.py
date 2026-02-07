@@ -1,4 +1,4 @@
-"""Evaluator for task_00_filter_numbers."""
+"""Evaluator for task_00_fizzbuzz."""
 
 from __future__ import annotations
 
@@ -10,35 +10,32 @@ from saotri_bench.models import RuleResult, TestCase
 
 
 class Evaluator(BaseEvaluator):
-    """Evaluator for the filter_numbers task."""
+    """Evaluator for the fizzbuzz task."""
 
     def check_correct_output(
         self, solution_fn: Callable[..., Any], test_case: TestCase
     ) -> RuleResult:
         """Check if output matches expected."""
-        # Make a copy to avoid mutation issues
         input_copy = copy.deepcopy(test_case.input)
         result = solution_fn(input_copy)
 
         if result == test_case.expected:
             return RuleResult.success()
 
-        # Determine scope from test case tags
         scope = test_case.tags[0] if test_case.tags else "unknown"
         return RuleResult.failed(scope=scope)
 
-    def check_no_mutation(
+    def check_correct_type(
         self, solution_fn: Callable[..., Any], test_case: TestCase
     ) -> RuleResult:
-        """Check if input was mutated."""
-        # Use a copy so that test_case.input is never corrupted
+        """Check if return value is a string."""
         input_copy = copy.deepcopy(test_case.input)
-        solution_fn(input_copy)
+        result = solution_fn(input_copy)
 
-        if input_copy == test_case.input:
+        if isinstance(result, str):
             return RuleResult.success()
 
-        return RuleResult.failed(scope="direct")
+        return RuleResult.failed(scope="type_check")
 
     def check_deterministic(
         self, solution_fn: Callable[..., Any], test_case: TestCase
@@ -52,4 +49,4 @@ class Evaluator(BaseEvaluator):
         if all(r == results[0] for r in results):
             return RuleResult.success()
 
-        return RuleResult.failed(scope="ordering")
+        return RuleResult.failed(scope="consistency")

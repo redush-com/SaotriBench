@@ -1,0 +1,83 @@
+id: "task_04_sort_objects"
+name: "Sort Objects"
+description: "Sort a list of dicts with evolving key format and rules"
+difficulty: "medium"
+
+interface:
+  function_name: "sort_objects"
+  signature: "def sort_objects(items: list[dict], key: str) -> list[dict]"
+  allowed_imports: []
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Basic ascending sort by key"
+    rules:
+      - id: "correct_output"
+        description: "Sorted output matches expected"
+        scopes: ["basic_sort"]
+
+  - id: 1
+    description: "Stable sort"
+    rules:
+      - id: "correct_output"
+        description: "Sorted output matches expected"
+        scopes: ["basic_sort", "stability"]
+      - id: "no_mutation"
+        description: "Input list must not be modified"
+        scopes: ["direct"]
+
+  - id: 2
+    description: "Missing keys go to the end"
+    rules:
+      - id: "correct_output"
+        description: "Sorted output matches expected"
+        scopes: ["basic_sort", "stability", "missing_key"]
+      - id: "no_mutation"
+        description: "Input list must not be modified"
+        scopes: ["direct"]
+
+  - id: 3
+    description: "Descending with minus prefix"
+    rules:
+      - id: "correct_output"
+        description: "Sorted output matches expected"
+        scopes: ["basic_sort", "stability", "missing_key", "descending"]
+      - id: "no_mutation"
+        description: "Input list must not be modified"
+        scopes: ["direct"]
+
+  - id: 4
+    description: "Multi-key sort with comma separator"
+    rules:
+      - id: "correct_output"
+        description: "Sorted output matches expected"
+        scopes: ["basic_sort", "stability", "missing_key", "descending", "multi_key"]
+      - id: "no_mutation"
+        description: "Input list must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same inputs always produce same output"
+        scopes: ["consistency"]
+
+  - id: 5
+    description: "Error handling"
+    rules:
+      - id: "correct_output"
+        description: "Sorted output matches expected"
+        scopes: ["basic_sort", "stability", "missing_key", "descending", "multi_key", "empty_input"]
+      - id: "no_mutation"
+        description: "Input list must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same inputs always produce same output"
+        scopes: ["consistency"]
+      - id: "correct_error"
+        description: "Raises ValueError for invalid key"
+        scopes: ["error_handling"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 30

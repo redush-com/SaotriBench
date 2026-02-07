@@ -1,0 +1,47 @@
+id: "task_00_fizzbuzz"
+name: "FizzBuzz Extended"
+description: "Implement FizzBuzz with evolving divisor rules"
+difficulty: "easy"
+
+interface:
+  function_name: "fizzbuzz"
+  signature: "def fizzbuzz(n: int) -> str"
+  allowed_imports: []
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Classic FizzBuzz"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected string"
+        scopes: ["divisible_by_3", "divisible_by_5", "divisible_by_15", "plain_number"]
+
+  - id: 1
+    description: "New divisor rule"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected string"
+        scopes: ["divisible_by_3", "divisible_by_5", "divisible_by_15", "plain_number", "divisible_by_7"]
+      - id: "correct_type"
+        description: "Return value must be a string"
+        scopes: ["type_check"]
+
+  - id: 2
+    description: "Combined divisor rules"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected string"
+        scopes: ["divisible_by_3", "divisible_by_5", "divisible_by_15", "plain_number", "divisible_by_7", "divisible_by_21", "divisible_by_35", "divisible_by_105"]
+      - id: "correct_type"
+        description: "Return value must be a string"
+        scopes: ["type_check"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 15

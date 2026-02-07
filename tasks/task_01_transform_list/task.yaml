@@ -1,0 +1,47 @@
+id: "task_01_transform_list"
+name: "Transform List"
+description: "Transform a list of integers with evolving rules"
+difficulty: "easy"
+
+interface:
+  function_name: "transform"
+  signature: "def transform(numbers: list[int]) -> list[int]"
+  allowed_imports: []
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Basic transformation"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected transformed list"
+        scopes: ["basic"]
+
+  - id: 1
+    description: "Handle negative numbers differently"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected transformed list"
+        scopes: ["basic", "negative_handling"]
+      - id: "no_mutation"
+        description: "Input list must not be modified"
+        scopes: ["direct"]
+
+  - id: 2
+    description: "Cap large results"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected transformed list"
+        scopes: ["basic", "negative_handling", "cap_overflow"]
+      - id: "no_mutation"
+        description: "Input list must not be modified"
+        scopes: ["direct"]
+      - id: "correct_type"
+        description: "Return value must be a list"
+        scopes: ["type_check"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 15

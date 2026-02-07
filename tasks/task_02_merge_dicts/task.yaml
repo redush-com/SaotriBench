@@ -1,0 +1,57 @@
+id: "task_02_merge_dicts"
+name: "Merge Dictionaries"
+description: "Merge two dictionaries with evolving conflict resolution rules"
+difficulty: "easy"
+
+interface:
+  function_name: "merge"
+  signature: "def merge(a: dict, b: dict) -> dict"
+  allowed_imports: ["copy"]
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Basic merge with override"
+    rules:
+      - id: "correct_output"
+        description: "Merged result matches expected"
+        scopes: ["basic", "override"]
+
+  - id: 1
+    description: "Type-aware conflict resolution"
+    rules:
+      - id: "correct_output"
+        description: "Merged result matches expected"
+        scopes: ["basic", "override", "numeric_conflict", "string_conflict"]
+      - id: "no_mutation"
+        description: "Input dicts must not be modified"
+        scopes: ["direct"]
+
+  - id: 2
+    description: "Recursive nested merge"
+    rules:
+      - id: "correct_output"
+        description: "Merged result matches expected"
+        scopes: ["basic", "override", "numeric_conflict", "string_conflict", "nested_merge"]
+      - id: "no_mutation"
+        description: "Input dicts must not be modified"
+        scopes: ["direct"]
+
+  - id: 3
+    description: "List merge and determinism"
+    rules:
+      - id: "correct_output"
+        description: "Merged result matches expected"
+        scopes: ["basic", "override", "numeric_conflict", "string_conflict", "nested_merge", "list_merge"]
+      - id: "no_mutation"
+        description: "Input dicts must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same inputs always produce same output"
+        scopes: ["consistency"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 20

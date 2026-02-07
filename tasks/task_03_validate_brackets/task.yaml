@@ -1,0 +1,61 @@
+id: "task_03_validate_brackets"
+name: "Validate Brackets"
+description: "Validate bracket strings with evolving requirements"
+difficulty: "medium"
+
+interface:
+  function_name: "validate_brackets"
+  signature: "def validate_brackets(s: str) -> bool"
+  allowed_imports: []
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Round brackets only"
+    rules:
+      - id: "correct_output"
+        description: "Validation result matches expected"
+        scopes: ["round_only"]
+
+  - id: 1
+    description: "All bracket types"
+    rules:
+      - id: "correct_output"
+        description: "Validation result matches expected"
+        scopes: ["round_only", "mixed_brackets"]
+
+  - id: 2
+    description: "Whitespace and empty input handling"
+    rules:
+      - id: "correct_output"
+        description: "Validation result matches expected"
+        scopes: ["round_only", "mixed_brackets", "whitespace", "empty_input"]
+
+  - id: 3
+    description: "ValueError with error position"
+    rules:
+      - id: "correct_output"
+        description: "Returns True for valid strings"
+        scopes: ["round_only", "mixed_brackets", "whitespace", "empty_input"]
+      - id: "correct_error"
+        description: "Raises ValueError with position for invalid strings"
+        scopes: ["error_position"]
+
+  - id: 4
+    description: "Performance with large inputs"
+    rules:
+      - id: "correct_output"
+        description: "Returns True for valid strings"
+        scopes: ["round_only", "mixed_brackets", "whitespace", "empty_input"]
+      - id: "correct_error"
+        description: "Raises ValueError with position for invalid strings"
+        scopes: ["error_position"]
+      - id: "performance"
+        description: "Handles large inputs within time limit"
+        scopes: ["large_input"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 25
