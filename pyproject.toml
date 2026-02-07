@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "flux-code-bench"
+name = "saotri-bench"
 version = "0.1.0"
-description = "FluxCodeBench: Dynamic Coding Problems Benchmark"
+description = "Saotri Bench: Dynamic Coding Problems Benchmark"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -21,11 +21,11 @@ dependencies = [
 ]
 
 [project.scripts]
-flux-code-bench = "flux_code_bench.cli:main"
+saotri-bench = "saotri_bench.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["flux_code_bench*"]
+include = ["saotri_bench*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.md"]

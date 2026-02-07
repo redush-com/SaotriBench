@@ -1,4 +1,4 @@
-"""Data models for FluxCodeBench."""
+"""Data models for Saotri Bench."""
 
 from __future__ import annotations
 

@@ -3,7 +3,7 @@
 > ⚠️ **Important**
 > 
 > This is a purely illustrative example created to clearly demonstrate:
-> - how a FluxCodeBench task is structured
+> - how a Saotri Bench task is structured
 > - how phases evolve
 > - how hidden requirements are inferred via feedback
 > 
@@ -171,7 +171,7 @@ limits:
 ## 7. tests.py (Hidden Test Cases)
 
 ```python
-from flux_code_bench.testing import TestCase
+from saotri_bench.testing import TestCase
 
 TEST_CASES = [
 
@@ -218,7 +218,7 @@ TEST_CASES = [
 ## 8. evaluator.py (Simplified)
 
 ```python
-from flux_code_bench.evaluator import BaseEvaluator, RuleResult
+from saotri_bench.evaluator import BaseEvaluator, RuleResult
 import copy
 
 class Evaluator(BaseEvaluator):

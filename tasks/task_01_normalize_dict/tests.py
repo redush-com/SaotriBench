@@ -1,6 +1,6 @@
 """Test cases for task_01_normalize_dict."""
 
-from flux_code_bench.models import TestCase
+from saotri_bench.models import TestCase
 
 TEST_CASES = [
     # Phase 0 - basic normalization

@@ -1,4 +1,4 @@
-"""Main runner for FluxCodeBench tasks."""
+"""Main runner for Saotri Bench tasks."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ from .sandbox import (
 
 
 class Runner:
-    """Main benchmark runner."""
+    """Main Saotri Bench runner."""
 
     def __init__(
         self,

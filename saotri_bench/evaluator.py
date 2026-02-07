@@ -1,4 +1,4 @@
-"""Base evaluator for FluxCodeBench tasks."""
+"""Base evaluator for Saotri Bench tasks."""
 
 from __future__ import annotations
 

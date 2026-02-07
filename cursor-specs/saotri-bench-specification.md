@@ -1,9 +1,9 @@
-# FluxCodeBench
+# Saotri Bench
 ## Technical Specification v1.0 (MVP)
 
 ## 1. Goal
 
-FluxCodeBench evaluates how efficiently an LLM or agent system can **discover hidden requirements** through iterative feedback.
+Saotri Bench evaluates how efficiently an LLM or agent system can **discover hidden requirements** through iterative feedback.
 
 **Core challenge:** The agent receives only minimal initial information (input/output types, basic problem class). The actual correctness constraints are **not fully disclosed** — the agent must infer them from structured feedback on failed attempts.
 
@@ -166,7 +166,7 @@ Implement a function that normalizes a nested dictionary...
 
 ```python
 from typing import Any
-from flux_code_bench.evaluator import BaseEvaluator, RuleResult
+from saotri_bench.evaluator import BaseEvaluator, RuleResult
 
 class Evaluator(BaseEvaluator):
     def check_correct_output(self, solution_fn, test_case) -> RuleResult:
@@ -196,7 +196,7 @@ class Evaluator(BaseEvaluator):
 ### 4.4 tests.py
 
 ```python
-from flux_code_bench.testing import TestCase
+from saotri_bench.testing import TestCase
 
 TEST_CASES = [
     TestCase(
@@ -474,7 +474,7 @@ After task completion, runner outputs:
 ### 8.2 File Structure
 
 ```
-flux_code_bench/
+saotri_bench/
 ├── __init__.py
 ├── runner.py           # Main benchmark runner
 ├── evaluator.py        # Base evaluator class
@@ -604,7 +604,7 @@ deps = {"b": ["a"], "c": ["b"]}
 
 ## 10. Acceptance Criteria
 
-FluxCodeBench MVP is complete when:
+Saotri Bench MVP is complete when:
 
 1. ✅ Runner can load and execute tasks from `task.yaml`
 2. ✅ Evaluator returns structured JSON feedback per attempt

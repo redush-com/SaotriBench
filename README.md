@@ -1,4 +1,4 @@
-# FluxCodeBench
+# Saotri Bench
 
 A coding benchmark for evaluating LLM agents on multi-phase programming tasks. Tests three critical capabilities:
 
@@ -8,7 +8,7 @@ A coding benchmark for evaluating LLM agents on multi-phase programming tasks. T
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        FluxCodeBench Flow                                   │
+│                        Saotri Bench Flow                                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────┐      ┌─────────────┐      ┌───────────┐      ┌─────────────┐ │
@@ -60,25 +60,25 @@ pip install -e .
 ### List available tasks
 
 ```bash
-flux-code-bench list --tasks-dir tasks
+saotri-bench list --tasks-dir tasks
 ```
 
 ### Validate a task
 
 ```bash
-flux-code-bench validate --task tasks/task_00_filter_numbers
+saotri-bench validate --task tasks/task_00_filter_numbers
 ```
 
 ### Run a task (single evaluation)
 
 ```bash
-flux-code-bench run --task tasks/task_00_filter_numbers --workspace ./workspace --single
+saotri-bench run --task tasks/task_00_filter_numbers --workspace ./workspace --single
 ```
 
 ### Run a task (interactive mode)
 
 ```bash
-flux-code-bench run --task tasks/task_00_filter_numbers --workspace ./workspace
+saotri-bench run --task tasks/task_00_filter_numbers --workspace ./workspace
 ```
 
 In interactive mode, the runner watches for changes to `workspace/solution.py` and evaluates each update.
@@ -142,7 +142,7 @@ tasks/task_00_filter_numbers/
 3. Write `problem.md` (what the agent sees)
 4. Implement `evaluator.py` with `check_{rule_id}` methods
 5. Create `tests.py` with `TEST_CASES` list
-6. Validate with `flux-code-bench validate --task tasks/your_task`
+6. Validate with `saotri-bench validate --task tasks/your_task`
 
 ### Example task.yaml
 
@@ -190,6 +190,21 @@ limits:
 | Medium | 6–15 | Moderate complexity, multiple interacting rules |
 | Hard | 16–30 | Complex algorithms, many edge cases |
 | Expert | 31–50 | Deep challenges, extensive hidden states |
+
+## The Name: SAOTRI
+
+**SAOTRI** is an acronym that captures the core dimensions of the benchmark evaluation model:
+
+| Letter | Stands for | Description |
+|--------|-----------|-------------|
+| **S** | Hidden **S**tate | The concealed environment state — infrastructure, load, constraints invisible to the agent |
+| **A** | **A**ctions | The agent's actions, manifested as code patches submitted each attempt |
+| **O** | **O**bservations | What the agent perceives — logs, metrics, error signals, structured feedback |
+| **T** | Non-stationary **T**ransitions | The environment dynamics that shift across phases — rules accumulate, constraints tighten |
+| **R** | **R**esilience function | The reward signal measuring solution robustness and survival under evolving requirements |
+| **I** | **I**nvariants | The safety and correctness guarantees — state integrity, data safety, behavioral contracts |
+
+Learn more at [saotri.com](https://saotri.com)
 
 ## License
 

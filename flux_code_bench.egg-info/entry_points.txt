@@ -1,2 +1,0 @@
-[console_scripts]
-flux-code-bench = flux_code_bench.cli:main

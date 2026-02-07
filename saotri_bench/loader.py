@@ -1,4 +1,4 @@
-"""Task loader for FluxCodeBench."""
+"""Task loader for Saotri Bench."""
 
 from __future__ import annotations
 
@@ -108,7 +108,7 @@ def load_evaluator(task_dir: Path) -> BaseEvaluator:
         raise FileNotFoundError(f"evaluator.py not found in {task_dir}")
 
     # Create a unique module name
-    module_name = f"flux_code_bench_task_{task_dir.name}_evaluator"
+    module_name = f"saotri_bench_task_{task_dir.name}_evaluator"
 
     # Load the module dynamically
     spec = importlib.util.spec_from_file_location(module_name, evaluator_file)
@@ -134,7 +134,7 @@ def load_tests(task_dir: Path) -> list[TestCase]:
         raise FileNotFoundError(f"tests.py not found in {task_dir}")
 
     # Create a unique module name
-    module_name = f"flux_code_bench_task_{task_dir.name}_tests"
+    module_name = f"saotri_bench_task_{task_dir.name}_tests"
 
     # Load the module dynamically
     spec = importlib.util.spec_from_file_location(module_name, tests_file)

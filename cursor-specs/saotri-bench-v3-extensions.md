@@ -1,8 +1,8 @@
-# FluxCodeBench v3: Extensions Specification
+# Saotri Bench v3: Extensions Specification
 
 ## Strategy Sensitivity, Latent Rules, and Beyond Function-Level Tasks
 
-This document defines mandatory extensions to the FluxCodeBench MVP required to elevate the benchmark from strong agent evaluation to **research-grade agent intelligence evaluation**.
+This document defines mandatory extensions to the Saotri Bench MVP required to elevate the benchmark from strong agent evaluation to **research-grade agent intelligence evaluation**.
 
 The extensions address four critical gaps:
 
@@ -291,7 +291,7 @@ These rules are ideal candidates for **latent rules**.
 
 ### 4.5 Roadmap Commitment (Required)
 
-FluxCodeBench MUST explicitly state:
+Saotri Bench MUST explicitly state:
 
 ```
 Current release evaluates L1 tasks only.
@@ -305,7 +305,7 @@ This prevents misinterpretation of benchmark scope.
 
 ## 5. Acceptance Criteria for Research-Grade Rating
 
-FluxCodeBench reaches research-grade completeness when:
+Saotri Bench reaches research-grade completeness when:
 
 - ✅ Diff-based metrics are recorded per attempt
 - ✅ Useless and destructive edits are classified
@@ -324,4 +324,4 @@ FluxCodeBench reaches research-grade completeness when:
 | Latent Rules | Test requirement inference | v3.0 |
 | Task Levels L2–L5 | Beyond function-level evaluation | v3.x+ |
 
-These extensions transform FluxCodeBench from a correctness benchmark into a **strategy and intelligence benchmark**.
+These extensions transform Saotri Bench from a correctness benchmark into a **strategy and intelligence benchmark**.
