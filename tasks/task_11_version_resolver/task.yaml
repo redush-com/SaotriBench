@@ -1,0 +1,203 @@
+id: "task_11_version_resolver"
+name: "Version Resolver"
+description: "Resolve package version dependencies with evolving constraint semantics"
+difficulty: "hard"
+
+interface:
+  function_name: "resolve"
+  signature: "def resolve(dependencies: dict, registry: dict, options: dict | None = None) -> dict"
+  allowed_imports: ["re", "collections"]
+
+execution:
+  timeout_seconds: 15
+
+phases:
+  - id: 0
+    description: "Exact version matching"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match"]
+
+  - id: 1
+    description: "Semver range matching"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching"]
+
+  - id: 2
+    description: "Transitive dependencies"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive"]
+
+  - id: 3
+    description: "Version conflict detection"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive"]
+      - id: "correct_error"
+        description: "Raises ValueError on version conflicts"
+        scopes: ["version_conflict"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 4
+    description: "Best-fit version selection"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts"
+        scopes: ["version_conflict"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 5
+    description: "Pre-release handling"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts"
+        scopes: ["version_conflict"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 6
+    description: "Circular dependency detection"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 7
+    description: "Optional dependencies"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 8
+    description: "Peer dependencies"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 9
+    description: "Backtracking resolution"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 10
+    description: "Lock file preference"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution", "lock_preference"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 11
+    description: "Platform constraints"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution", "lock_preference", "platform_filter"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 12
+    description: "Resolution metadata"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution", "lock_preference", "platform_filter", "resolution_metadata"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 13
+    description: "Deterministic resolution"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution", "lock_preference", "platform_filter", "resolution_metadata"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["deterministic_resolve"]
+
+  - id: 14
+    description: "Performance with large registry"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution", "lock_preference", "platform_filter", "resolution_metadata"]
+      - id: "correct_error"
+        description: "Raises ValueError on conflicts or cycles"
+        scopes: ["version_conflict", "circular_dependency"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["deterministic_resolve"]
+      - id: "performance"
+        description: "Handles large registries within time limit"
+        scopes: ["large_registry"]
+
+limits:
+  max_attempts_per_phase: 8
+  max_total_attempts: 100

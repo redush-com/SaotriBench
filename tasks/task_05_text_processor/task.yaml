@@ -1,0 +1,84 @@
+id: "task_05_text_processor"
+name: "Text Processor"
+description: "Process text with evolving normalization and analysis rules"
+difficulty: "medium"
+
+interface:
+  function_name: "process_text"
+  signature: "def process_text(text: str, options: dict | None = None) -> str | dict"
+  allowed_imports: ["unicodedata"]
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Basic whitespace normalization"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected processed text"
+        scopes: ["basic_whitespace"]
+
+  - id: 1
+    description: "Unicode normalization"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected processed text"
+        scopes: ["basic_whitespace", "unicode_combining"]
+
+  - id: 2
+    description: "Quoted content preservation"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected processed text"
+        scopes: ["basic_whitespace", "unicode_combining", "quoted_content"]
+      - id: "no_mutation"
+        description: "Input text must not be modified"
+        scopes: ["direct"]
+
+  - id: 3
+    description: "Escape sequence handling"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected processed text"
+        scopes: ["basic_whitespace", "unicode_combining", "quoted_content", "escape_handling"]
+      - id: "no_mutation"
+        description: "Input text must not be modified"
+        scopes: ["direct"]
+
+  - id: 4
+    description: "Analysis mode"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected result"
+        scopes: ["basic_whitespace", "unicode_combining", "quoted_content", "escape_handling", "analysis_mode"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 5
+    description: "Nested quotes"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected result"
+        scopes: ["basic_whitespace", "unicode_combining", "quoted_content", "escape_handling", "analysis_mode", "nested_quotes"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 6
+    description: "Punctuation normalization and determinism"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected result"
+        scopes: ["basic_whitespace", "unicode_combining", "quoted_content", "escape_handling", "analysis_mode", "nested_quotes", "punctuation_normalization"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 35

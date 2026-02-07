@@ -1,0 +1,107 @@
+id: "task_07_expression_parser"
+name: "Expression Parser"
+description: "Parse and evaluate mathematical expressions with evolving grammar"
+difficulty: "medium"
+
+interface:
+  function_name: "evaluate"
+  signature: "def evaluate(expression: str, variables: dict | None = None) -> float"
+  allowed_imports: ["math"]
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Basic addition and subtraction"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic"]
+
+  - id: 1
+    description: "Multiplication and division with precedence"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence"]
+
+  - id: 2
+    description: "Parentheses"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence", "grouping"]
+
+  - id: 3
+    description: "Unary operators"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence", "grouping", "unary_operator"]
+
+  - id: 4
+    description: "Floating point precision"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence", "grouping", "unary_operator", "float_precision"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+  - id: 5
+    description: "Variable resolution"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence", "grouping", "unary_operator", "float_precision", "variable_resolution"]
+      - id: "correct_error"
+        description: "Raises ValueError for undefined variables"
+        scopes: ["undefined_variable"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+  - id: 6
+    description: "Implicit multiplication"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence", "grouping", "unary_operator", "float_precision", "variable_resolution", "implicit_multiply"]
+      - id: "correct_error"
+        description: "Raises ValueError for errors"
+        scopes: ["undefined_variable"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+  - id: 7
+    description: "Power operator with right-associativity"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence", "grouping", "unary_operator", "float_precision", "variable_resolution", "implicit_multiply", "right_associativity"]
+      - id: "correct_error"
+        description: "Raises ValueError for errors"
+        scopes: ["undefined_variable"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+  - id: 8
+    description: "Division by zero with context"
+    rules:
+      - id: "correct_output"
+        description: "Evaluation result matches expected"
+        scopes: ["basic_arithmetic", "precedence", "grouping", "unary_operator", "float_precision", "variable_resolution", "implicit_multiply", "right_associativity"]
+      - id: "correct_error"
+        description: "Raises ValueError with context for errors"
+        scopes: ["undefined_variable", "zero_division_context"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 45

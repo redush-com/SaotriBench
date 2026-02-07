@@ -1,0 +1,111 @@
+id: "task_08_access_control"
+name: "Access Control"
+description: "Evaluate access control rules with evolving policy semantics"
+difficulty: "medium"
+
+interface:
+  function_name: "check_access"
+  signature: "def check_access(user: dict, resource: dict, rules: list[dict]) -> dict"
+  allowed_imports: ["re"]
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Basic role-based access"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check"]
+
+  - id: 1
+    description: "Multiple roles"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role"]
+
+  - id: 2
+    description: "Resource ownership"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override"]
+
+  - id: 3
+    description: "Deny rule priority"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override", "deny_priority"]
+      - id: "no_mutation"
+        description: "Inputs must not be modified"
+        scopes: ["direct"]
+
+  - id: 4
+    description: "Role hierarchy"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override", "deny_priority", "role_inheritance"]
+      - id: "no_mutation"
+        description: "Inputs must not be modified"
+        scopes: ["direct"]
+
+  - id: 5
+    description: "Temporal constraints"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override", "deny_priority", "role_inheritance", "temporal_constraint"]
+      - id: "no_mutation"
+        description: "Inputs must not be modified"
+        scopes: ["direct"]
+
+  - id: 6
+    description: "Audit trail output"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override", "deny_priority", "role_inheritance", "temporal_constraint", "audit_trail"]
+      - id: "no_mutation"
+        description: "Inputs must not be modified"
+        scopes: ["direct"]
+
+  - id: 7
+    description: "Wildcard resource matching"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override", "deny_priority", "role_inheritance", "temporal_constraint", "audit_trail", "wildcard_matching"]
+      - id: "no_mutation"
+        description: "Inputs must not be modified"
+        scopes: ["direct"]
+
+  - id: 8
+    description: "Specificity-based conflict resolution"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override", "deny_priority", "role_inheritance", "temporal_constraint", "audit_trail", "wildcard_matching", "specificity_resolution"]
+      - id: "no_mutation"
+        description: "Inputs must not be modified"
+        scopes: ["direct"]
+
+  - id: 9
+    description: "Conditional rules"
+    rules:
+      - id: "correct_output"
+        description: "Access decision matches expected"
+        scopes: ["basic_role_check", "multi_role", "ownership_override", "deny_priority", "role_inheritance", "temporal_constraint", "audit_trail", "wildcard_matching", "specificity_resolution", "conditional_rules"]
+      - id: "no_mutation"
+        description: "Inputs must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 50

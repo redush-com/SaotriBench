@@ -1,0 +1,140 @@
+id: "task_10_data_pipeline"
+name: "Data Pipeline"
+description: "Execute data transformation pipelines with evolving semantics"
+difficulty: "hard"
+
+interface:
+  function_name: "run_pipeline"
+  signature: "def run_pipeline(data: list[dict], steps: list[dict]) -> dict"
+  allowed_imports: ["copy", "collections"]
+
+execution:
+  timeout_seconds: 15
+
+phases:
+  - id: 0
+    description: "Basic field transformation"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform"]
+
+  - id: 1
+    description: "Step chaining"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining"]
+
+  - id: 2
+    description: "Filter step"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records"]
+
+  - id: 3
+    description: "Aggregation step"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation"]
+      - id: "no_mutation"
+        description: "Input data must not be modified"
+        scopes: ["direct"]
+
+  - id: 4
+    description: "Schema validation"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 5
+    description: "Null handling"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch", "null_semantics"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 6
+    description: "Error partitioning"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch", "null_semantics", "error_partition"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 7
+    description: "Conditional steps"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch", "null_semantics", "error_partition", "conditional_execution"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 8
+    description: "Cross-step references"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch", "null_semantics", "error_partition", "conditional_execution", "cross_step_reference"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 9
+    description: "Idempotency"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch", "null_semantics", "error_partition", "conditional_execution", "cross_step_reference"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["idempotent"]
+
+  - id: 10
+    description: "Performance with large data"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch", "null_semantics", "error_partition", "conditional_execution", "cross_step_reference"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["idempotent"]
+      - id: "performance"
+        description: "Handles large data within time limit"
+        scopes: ["large_pipeline"]
+
+  - id: 11
+    description: "Pipeline observability"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["basic_transform", "step_chaining", "filter_records", "aggregation", "schema_mismatch", "null_semantics", "error_partition", "conditional_execution", "cross_step_reference", "observability"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["idempotent"]
+
+limits:
+  max_attempts_per_phase: 8
+  max_total_attempts: 80

@@ -1,0 +1,152 @@
+id: "task_09_schedule_optimizer"
+name: "Schedule Optimizer"
+description: "Schedule tasks with dependencies, resources, and evolving constraints"
+difficulty: "hard"
+
+interface:
+  function_name: "schedule"
+  signature: "def schedule(tasks: list[dict], constraints: dict) -> list[dict] | dict"
+  allowed_imports: ["collections", "heapq"]
+
+execution:
+  timeout_seconds: 15
+
+phases:
+  - id: 0
+    description: "Sequential scheduling"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential"]
+
+  - id: 1
+    description: "Dependency ordering"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order"]
+
+  - id: 2
+    description: "Parallel execution"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism"]
+
+  - id: 3
+    description: "Resource constraints"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 4
+    description: "Priority scheduling"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 5
+    description: "Deadline enforcement"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling"]
+      - id: "correct_error"
+        description: "Raises ValueError on deadline violations"
+        scopes: ["deadline_violation"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 6
+    description: "Priority inversion detection"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling", "priority_inversion"]
+      - id: "correct_error"
+        description: "Raises ValueError on deadline violations"
+        scopes: ["deadline_violation"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 7
+    description: "Preemption support"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling", "priority_inversion", "preemption_resume"]
+      - id: "correct_error"
+        description: "Raises ValueError on deadline violations"
+        scopes: ["deadline_violation"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 8
+    description: "Resource changeover time"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling", "priority_inversion", "preemption_resume", "changeover_time"]
+      - id: "correct_error"
+        description: "Raises ValueError on deadline violations"
+        scopes: ["deadline_violation"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 9
+    description: "Rich output format"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling", "priority_inversion", "preemption_resume", "changeover_time", "rich_output"]
+      - id: "correct_error"
+        description: "Raises ValueError on deadline violations"
+        scopes: ["deadline_violation"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 10
+    description: "Makespan optimization"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling", "priority_inversion", "preemption_resume", "changeover_time", "rich_output", "optimization"]
+      - id: "correct_error"
+        description: "Raises ValueError on deadline violations"
+        scopes: ["deadline_violation"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 11
+    description: "Deterministic output"
+    rules:
+      - id: "correct_output"
+        description: "Schedule matches expected"
+        scopes: ["sequential", "dependency_order", "parallelism", "resource_conflict", "priority_scheduling", "priority_inversion", "preemption_resume", "changeover_time", "rich_output", "optimization"]
+      - id: "correct_error"
+        description: "Raises ValueError on deadline violations"
+        scopes: ["deadline_violation"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["deterministic_tiebreak"]
+
+limits:
+  max_attempts_per_phase: 8
+  max_total_attempts: 80

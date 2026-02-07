@@ -1,0 +1,94 @@
+id: "task_06_cache_eviction"
+name: "Cache Eviction"
+description: "Manage a cache with evolving eviction policies"
+difficulty: "medium"
+
+interface:
+  function_name: "manage_cache"
+  signature: "def manage_cache(operations: list[dict], config: dict) -> list[dict]"
+  allowed_imports: ["collections"]
+
+execution:
+  timeout_seconds: 10
+
+phases:
+  - id: 0
+    description: "Basic key-value operations"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations"]
+
+  - id: 1
+    description: "Capacity limit with eviction"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations", "capacity_eviction"]
+
+  - id: 2
+    description: "TTL expiry"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations", "capacity_eviction", "ttl_expiry"]
+      - id: "no_mutation"
+        description: "Input operations list must not be modified"
+        scopes: ["direct"]
+
+  - id: 3
+    description: "Priority-based eviction"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations", "capacity_eviction", "ttl_expiry", "priority_override"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 4
+    description: "Dirty eviction tracking"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations", "capacity_eviction", "ttl_expiry", "priority_override", "dirty_eviction"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 5
+    description: "Tiered capacity"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations", "capacity_eviction", "ttl_expiry", "priority_override", "dirty_eviction", "tiered_capacity"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 6
+    description: "Batch operations"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations", "capacity_eviction", "ttl_expiry", "priority_override", "dirty_eviction", "tiered_capacity", "atomicity"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+
+  - id: 7
+    description: "Performance with large input"
+    rules:
+      - id: "correct_output"
+        description: "Operation results match expected"
+        scopes: ["basic_operations", "capacity_eviction", "ttl_expiry", "priority_override", "dirty_eviction", "tiered_capacity", "atomicity"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "performance"
+        description: "Handles large inputs within time limit"
+        scopes: ["large_input"]
+
+limits:
+  max_attempts_per_phase: 5
+  max_total_attempts: 40
