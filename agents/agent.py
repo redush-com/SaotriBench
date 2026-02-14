@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from .config import ModelConfig
 from .llm_client import OpenRouterClient
@@ -171,6 +174,22 @@ Write the complete function implementation. Output ONLY the code in a ```python 
 
         return "\n".join(parts)
 
+    def _extract_and_log(self, raw_content: str) -> str:
+        """Extract code from LLM response, logging diagnostics on empty result."""
+        code = OpenRouterClient._extract_code(raw_content)
+        if not code.strip():
+            preview = raw_content[:500] if raw_content else "<None>"
+            logger.warning(
+                "Code extraction returned empty. "
+                "Model: %s | Raw response length: %d | Preview: %s",
+                self.model.label,
+                len(raw_content) if raw_content else 0,
+                preview,
+            )
+            print(f"  [warn] empty code extracted from {self.model.label} "
+                  f"(raw response: {len(raw_content) if raw_content else 0} chars)")
+        return code
+
     def generate_solution(self) -> str:
         """Generate initial solution.
 
@@ -188,7 +207,7 @@ Write the complete function implementation. Output ONLY the code in a ```python 
         response = self.client.chat(self.model, self.conversation_history)
         duration = time.time() - start
 
-        code = OpenRouterClient._extract_code(response.content)
+        code = self._extract_and_log(response.content)
 
         # Track assistant response in conversation
         self.conversation_history.append(
@@ -235,7 +254,7 @@ Write the complete function implementation. Output ONLY the code in a ```python 
         response = self.client.chat(self.model, self.conversation_history)
         duration = time.time() - start
 
-        code = OpenRouterClient._extract_code(response.content)
+        code = self._extract_and_log(response.content)
 
         self.conversation_history.append(
             {"role": "assistant", "content": response.content}
