@@ -33,6 +33,8 @@ class OpenRouterClient:
 
     BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 
+    MAX_EMPTY_RETRIES = 2
+
     def __init__(self, api_key: str | None = None, timeout: float = 120.0):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
         if not self.api_key:
@@ -47,7 +49,7 @@ class OpenRouterClient:
         model: ModelConfig,
         messages: list[dict[str, str]],
     ) -> LLMResponse:
-        """Send a chat completion request.
+        """Send a chat completion request with retry on empty responses.
 
         Args:
             model: Model configuration
@@ -55,6 +57,34 @@ class OpenRouterClient:
 
         Returns:
             LLMResponse with generated content and token usage
+
+        Raises:
+            EmptyResponseError: If model returns empty content after all retries
+        """
+        last_error: EmptyResponseError | None = None
+
+        for attempt in range(1 + self.MAX_EMPTY_RETRIES):
+            if attempt > 0:
+                print(f"  [retry {attempt}/{self.MAX_EMPTY_RETRIES}] "
+                      f"empty response from {model.id}, retrying...")
+
+            try:
+                return self._request(model, messages)
+            except EmptyResponseError as e:
+                last_error = e
+                continue
+
+        raise last_error  # type: ignore[misc]
+
+    def _request(
+        self,
+        model: ModelConfig,
+        messages: list[dict[str, str]],
+    ) -> LLMResponse:
+        """Send a single chat completion request.
+
+        Raises:
+            EmptyResponseError: If model returns empty/null content
         """
         payload = {
             "model": model.id,
