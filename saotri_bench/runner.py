@@ -299,16 +299,19 @@ class Runner:
         """
         code = self._read_solution()
 
+        start_time = time.time()
+
         if not code.strip():
-            return self._create_error_feedback(
+            feedback = self._create_error_feedback(
                 self.total_attempts, "EmptyCode", "Solution file is empty"
             )
+        else:
+            feedback = self._evaluate_solution(code)
 
-        start_time = time.time()
-        feedback = self._evaluate_solution(code)
         duration = time.time() - start_time
 
-        # Update state
+        # Update state (always increment, even for empty solutions,
+        # so max-attempts safeguard can trigger and prevent infinite loops)
         self.total_attempts += 1
         self.phase_attempts += 1
         self.previous_feedback = feedback
