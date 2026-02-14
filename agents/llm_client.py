@@ -13,6 +13,10 @@ import httpx
 from .config import ModelConfig
 
 
+class EmptyResponseError(Exception):
+    """Raised when the model returns empty or null content."""
+
+
 @dataclass
 class LLMResponse:
     """Response from LLM API."""
@@ -73,8 +77,15 @@ class OpenRouterClient:
 
         # Parse response
         choice = data["choices"][0]
-        content = choice["message"]["content"]
+        content = choice["message"].get("content") or ""
         usage = data.get("usage", {})
+
+        if not content.strip():
+            finish_reason = choice.get("finish_reason", "unknown")
+            raise EmptyResponseError(
+                f"Model {model.id} returned empty content "
+                f"(finish_reason={finish_reason})"
+            )
 
         return LLMResponse(
             content=content,
