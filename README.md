@@ -368,6 +368,26 @@ Reports are saved to `reports/` as JSON files (per-run details, per-task compari
 
 See [`agents/README.md`](agents/README.md) for full documentation.
 
+### Live Dashboard
+
+A real-time web dashboard shows benchmark progress as results come in:
+
+```bash
+python serve_dashboard.py
+# Opens at http://localhost:8050
+```
+
+The dashboard auto-refreshes every 10 seconds and displays:
+1. **Completion Summary** — models ranked by pass rate with token/duration stats
+2. **Pass/Fail Matrix** — every task x model result at a glance
+3. **By Difficulty** — easy/medium/hard breakdown per model
+
+To use a different port:
+
+```bash
+python serve_dashboard.py --port 9000
+```
+
 ## The Name: SAOTRI
 
 **SAOTRI** is an acronym that captures the core dimensions of the benchmark evaluation model:
