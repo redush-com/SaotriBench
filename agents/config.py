@@ -51,6 +51,7 @@ MODELS: dict[str, ModelConfig] = {
         label="Gemini 3 Pro",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
     "grok": ModelConfig(
         id="x-ai/grok-4",
