@@ -123,6 +123,7 @@ def run_agent_on_task(
     phase_results = []
     phases_completed = 0
     final_status = "failed"
+    current_phase_log: list[str] = []
 
     try:
         # Generate initial solution
@@ -161,6 +162,19 @@ def run_agent_on_task(
                 if feedback.error:
                     print(f"    ERROR: {feedback.error.message[:100]}")
 
+            # Capture log entry for this attempt
+            log_entry = (
+                f"Attempt {runner.total_attempts}: "
+                f"{feedback.status.value}, "
+                f"coverage={feedback.summary.coverage:.1%}"
+            )
+            if feedback.violations:
+                parts = [f"{v.rule_id}/{v.scope}" for v in feedback.violations]
+                log_entry += f" — violations: {', '.join(parts)}"
+            if feedback.error:
+                log_entry += f" — ERROR: {feedback.error.message[:200]}"
+            current_phase_log.append(log_entry)
+
             # Phase complete?
             if feedback.status == Status.VALID:
                 runner.metrics.complete_phase(runner.current_phase.id)
@@ -171,7 +185,9 @@ def run_agent_on_task(
                     "status": "completed",
                     "attempts": runner.phase_attempts,
                     "coverage": feedback.summary.coverage,
+                    "error_log": current_phase_log,
                 })
+                current_phase_log = []
 
                 if verbose:
                     print(f"  Phase {runner.current_phase.id} COMPLETED!")
@@ -201,6 +217,7 @@ def run_agent_on_task(
                             "status": "completed",
                             "attempts": 0,
                             "coverage": implicit_fb.summary.coverage,
+                            "error_log": [],
                         })
                         if verbose:
                             print(f"  Phase {runner.current_phase.id} COMPLETED (implicit)!")
@@ -270,6 +287,7 @@ def run_agent_on_task(
                     if runner.previous_feedback
                     else 0.0
                 ),
+                "error_log": current_phase_log,
             })
 
     result = RunResult(

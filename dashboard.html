@@ -184,7 +184,7 @@ function renderSummary(data) {
   for (const r of rows) {
     const star = r.incomplete ? ' *' : '';
     html += `<tr>
-      <td>${r.model}${star}</td>
+      <td><a href="/model?name=${encodeURIComponent(r.model)}" class="model-link">${r.model}</a>${star}</td>
       <td class="cell-num">${fmtPct(r.weightedRate)} ${progressBar(r.weightedRate)}</td>
       <td class="cell-num">${r.tasksPassed} / ${r.totalTasks}</td>
       <td class="cell-num">${fmtPct(r.passRate)}</td>
@@ -216,7 +216,7 @@ function renderMatrix(data) {
     <th>#</th><th>Task</th><th>Diff.</th><th>Phases</th>`;
 
   for (const m of data.models) {
-    html += `<th style="text-align:center">${m}</th>`;
+    html += `<th style="text-align:center"><a href="/model?name=${encodeURIComponent(m)}" class="model-link">${m}</a></th>`;
   }
   html += '</tr></thead><tbody>';
 
@@ -259,7 +259,7 @@ function renderDifficulty(data) {
     <th>Difficulty</th><th>Tasks</th>`;
 
   for (const m of data.models) {
-    html += `<th style="text-align:center">${m}</th>`;
+    html += `<th style="text-align:center"><a href="/model?name=${encodeURIComponent(m)}" class="model-link">${m}</a></th>`;
   }
   html += '</tr></thead><tbody>';
 

@@ -212,6 +212,17 @@ tr:nth-child(even) td { background: var(--bg-row-alt); }
 .progress-fill.orange { background: var(--orange); }
 .progress-fill.red { background: var(--red); }
 
+.model-link {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.model-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
 .sort-controls {
   display: inline-flex;
   gap: 4px;
