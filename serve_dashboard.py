@@ -21,6 +21,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent
 REPORTS_DIR = ROOT / "reports"
 DASHBOARD_FILE = ROOT / "dashboard.html"
+DASHBOARD_CSS = ROOT / "dashboard.css"
+LOGO_FILE = ROOT / "logo-32.png"
+FAVICON_FILE = ROOT / "favicon.ico"
+FAVICON_PNG = ROOT / "favicon-32x32.png"
 
 
 def scan_results() -> dict[str, Any]:
@@ -88,6 +92,14 @@ class DashboardHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:
         if self.path == "/" or self.path == "/index.html":
             self._serve_file(DASHBOARD_FILE, "text/html")
+        elif self.path == "/dashboard.css":
+            self._serve_file(DASHBOARD_CSS, "text/css")
+        elif self.path == "/logo-32.png":
+            self._serve_file(LOGO_FILE, "image/png")
+        elif self.path == "/favicon.ico":
+            self._serve_file(FAVICON_FILE, "image/x-icon")
+        elif self.path == "/favicon-32x32.png":
+            self._serve_file(FAVICON_PNG, "image/png")
         elif self.path == "/api/results":
             self._serve_json(scan_results())
         else:

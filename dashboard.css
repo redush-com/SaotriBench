@@ -41,10 +41,27 @@ header h1 {
   font-size: 20px;
   font-weight: 600;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  gap: 6px;
 }
 
-header h1 span {
+.home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.home-link:hover {
   color: var(--accent);
+}
+
+.logo {
+  flex-shrink: 0;
 }
 
 .status-bar {
