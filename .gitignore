@@ -20,6 +20,9 @@ env/
 *.swp
 *.swo
 
+# Claude
+.claude/settings.local.json
+
 # Workspace (runtime artifacts)
 workspace/
 
