@@ -3,238 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saotri Bench — Live Dashboard</title>
-<style>
-  :root {
-    --bg: #0d1117;
-    --bg-card: #161b22;
-    --bg-row-alt: #1c2129;
-    --border: #30363d;
-    --text: #e6edf3;
-    --text-dim: #8b949e;
-    --green: #3fb950;
-    --green-bg: rgba(63,185,80,0.12);
-    --red: #f85149;
-    --red-bg: rgba(248,81,73,0.12);
-    --orange: #d29922;
-    --orange-bg: rgba(210,153,34,0.12);
-    --gray: #484f58;
-    --accent: #58a6ff;
-    --pulse: #3fb950;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    padding: 24px;
-    min-height: 100vh;
-  }
-
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  header h1 {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  header h1 span {
-    color: var(--accent);
-  }
-
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .pulse-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--pulse);
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  .pulse-dot.error {
-    background: var(--red);
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(63,185,80,0.5); }
-    50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(63,185,80,0); }
-  }
-
-  section {
-    margin-bottom: 36px;
-  }
-
-  section h2 {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  section h2 .badge {
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--text-dim);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1px 8px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  th, td {
-    padding: 8px 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  th {
-    background: var(--bg);
-    color: var(--text-dim);
-    font-weight: 500;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    position: sticky;
-    top: 0;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:nth-child(even) td { background: var(--bg-row-alt); }
-
-  .cell-pass {
-    color: var(--green);
-    background: var(--green-bg) !important;
-    font-weight: 600;
-    text-align: center;
-  }
-
-  .cell-fail {
-    color: var(--red);
-    background: var(--red-bg) !important;
-    font-weight: 600;
-    text-align: center;
-  }
-
-  .cell-error {
-    color: var(--orange);
-    background: var(--orange-bg) !important;
-    font-weight: 600;
-    text-align: center;
-  }
-
-  .cell-na {
-    color: var(--gray);
-    text-align: center;
-  }
-
-  .cell-num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .diff-easy { color: var(--green); }
-  .diff-medium { color: var(--orange); }
-  .diff-hard { color: var(--red); }
-
-  .footnote {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 6px;
-  }
-
-  .loading {
-    color: var(--text-dim);
-    padding: 40px;
-    text-align: center;
-  }
-
-  .progress-bar {
-    width: 60px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 6px;
-  }
-
-  .progress-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-
-  .progress-fill.green { background: var(--green); }
-  .progress-fill.orange { background: var(--orange); }
-  .progress-fill.red { background: var(--red); }
-
-  .sort-controls {
-    display: inline-flex;
-    gap: 4px;
-    margin-left: 12px;
-  }
-
-  .sort-btn {
-    background: var(--bg);
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px 10px;
-    font-family: inherit;
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .sort-btn:hover {
-    color: var(--text);
-    border-color: var(--text-dim);
-  }
-
-  .sort-btn.active {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: rgba(88,166,255,0.08);
-  }
-</style>
+<title>SaotriBench — Live Dashboard</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 <body>
 
 <header>
-  <h1>Saotri <span>Bench</span> — Live Dashboard</h1>
+  <h1><a href="https://saotri.com" class="home-link"><img src="/logo-32.png" alt="" width="32" height="32" class="logo">SaotriBench</a> — Live Dashboard</h1>
   <div class="status-bar">
     <div class="pulse-dot" id="statusDot"></div>
     <span id="statusText">Connecting...</span>
@@ -337,10 +114,18 @@ function totalTaskCount(data) {
 
 // ── Render: Completion Summary ───────────────────────────
 
+const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5 };
+
 function renderSummary(data) {
   const lookup = buildLookup(data);
   const totalTasks = totalTaskCount(data);
   const totalPhasesAll = data.tasks.reduce((s, t) => s + t.total_phases, 0);
+
+  const taskMap = {};
+  for (const t of data.tasks) taskMap[t.task_id] = t;
+
+  const maxWeightedScore = data.tasks.reduce((s, t) =>
+    s + (DIFF_WEIGHT[(t.difficulty || 'easy').toLowerCase()] || 1), 0);
 
   const rows = [];
   for (const model of data.models) {
@@ -351,22 +136,29 @@ function renderSummary(data) {
     let totalTokens = 0;
     let totalDuration = 0;
     let latestTimestamp = '';
+    let weightedScore = 0;
 
     for (const r of Object.values(runs)) {
-      if (r.final_status === 'completed') tasksPassed++;
+      if (r.final_status === 'completed') {
+        tasksPassed++;
+        const task = taskMap[r.task_id];
+        weightedScore += DIFF_WEIGHT[(task?.difficulty || 'easy').toLowerCase()] || 1;
+      }
       phasesCompleted += r.phases_completed;
       totalTokens += r.token_usage?.total_tokens || 0;
       totalDuration += r.total_duration_seconds || 0;
       if (r.timestamp && r.timestamp > latestTimestamp) latestTimestamp = r.timestamp;
     }
 
-    const passRate = tasksTested > 0 ? tasksPassed / tasksTested : 0;
+    const passRate = totalTasks > 0 ? tasksPassed / totalTasks : 0;
     const phaseRate = totalPhasesAll > 0 ? phasesCompleted / totalPhasesAll : 0;
+    const weightedRate = maxWeightedScore > 0 ? weightedScore / maxWeightedScore : 0;
     const incomplete = tasksTested < totalTasks;
 
     rows.push({
-      model, tasksTested, tasksPassed, passRate,
+      model, tasksTested, tasksPassed, totalTasks, passRate,
       phasesCompleted, totalPhasesAll, phaseRate,
+      weightedScore, maxWeightedScore, weightedRate,
       totalTokens, totalDuration, incomplete, latestTimestamp
     });
   }
@@ -374,12 +166,13 @@ function renderSummary(data) {
   if (summarySort === 'recent') {
     rows.sort((a, b) => b.latestTimestamp.localeCompare(a.latestTimestamp));
   } else {
-    rows.sort((a, b) => b.passRate - a.passRate || b.phasesCompleted - a.phasesCompleted);
+    rows.sort((a, b) => b.weightedRate - a.weightedRate || b.phasesCompleted - a.phasesCompleted);
   }
 
   let html = `<table>
     <thead><tr>
       <th>Model</th>
+      <th class="cell-num">Weighted Score</th>
       <th class="cell-num">Tasks Passed</th>
       <th class="cell-num">Pass Rate</th>
       <th class="cell-num">Phases Done</th>
@@ -391,8 +184,9 @@ function renderSummary(data) {
   for (const r of rows) {
     const star = r.incomplete ? ' *' : '';
     html += `<tr>
-      <td>${r.model}${star}</td>
-      <td class="cell-num">${r.tasksPassed} / ${r.tasksTested}${star} ${progressBar(r.passRate)}</td>
+      <td><a href="/model?name=${encodeURIComponent(r.model)}" class="model-link">${r.model}</a>${star}</td>
+      <td class="cell-num">${fmtPct(r.weightedRate)} ${progressBar(r.weightedRate)}</td>
+      <td class="cell-num">${r.tasksPassed} / ${r.totalTasks}</td>
       <td class="cell-num">${fmtPct(r.passRate)}</td>
       <td class="cell-num">${r.phasesCompleted} / ${r.totalPhasesAll}</td>
       <td class="cell-num">${fmtPct(r.phaseRate)}</td>
@@ -407,6 +201,7 @@ function renderSummary(data) {
   if (incompleteModels.length > 0) {
     html += `<div class="footnote">* Not all tasks tested yet: ${incompleteModels.join(', ')}</div>`;
   }
+  html += `<div class="footnote">Weighted score: easy\u00d71, medium\u00d73, hard\u00d75</div>`;
 
   document.getElementById('summaryBadge').textContent = `${rows.length} models`;
   document.getElementById('summaryTable').innerHTML = html;
@@ -421,7 +216,7 @@ function renderMatrix(data) {
     <th>#</th><th>Task</th><th>Diff.</th><th>Phases</th>`;
 
   for (const m of data.models) {
-    html += `<th style="text-align:center">${m}</th>`;
+    html += `<th style="text-align:center"><a href="/model?name=${encodeURIComponent(m)}" class="model-link">${m}</a></th>`;
   }
   html += '</tr></thead><tbody>';
 
@@ -464,7 +259,7 @@ function renderDifficulty(data) {
     <th>Difficulty</th><th>Tasks</th>`;
 
   for (const m of data.models) {
-    html += `<th style="text-align:center">${m}</th>`;
+    html += `<th style="text-align:center"><a href="/model?name=${encodeURIComponent(m)}" class="model-link">${m}</a></th>`;
   }
   html += '</tr></thead><tbody>';
 

@@ -17,10 +17,19 @@ import sys
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
+
+import yaml
 
 ROOT = Path(__file__).resolve().parent
 REPORTS_DIR = ROOT / "reports"
+TASKS_DIR = ROOT / "tasks"
 DASHBOARD_FILE = ROOT / "dashboard.html"
+DASHBOARD_CSS = ROOT / "dashboard.css"
+MODEL_FILE = ROOT / "model.html"
+LOGO_FILE = ROOT / "logo-32.png"
+FAVICON_FILE = ROOT / "favicon.ico"
+FAVICON_PNG = ROOT / "favicon-32x32.png"
 
 
 def scan_results() -> dict[str, Any]:
@@ -82,14 +91,126 @@ def scan_results() -> dict[str, Any]:
     }
 
 
+def load_task_yaml(task_id: str) -> dict[str, Any] | None:
+    """Load and parse a task.yaml file, returning phase descriptions."""
+    yaml_path = TASKS_DIR / task_id / "task.yaml"
+    if not yaml_path.exists():
+        return None
+    try:
+        data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+        return data
+    except (yaml.YAMLError, OSError):
+        return None
+
+
+def get_all_tasks_meta() -> list[dict[str, Any]]:
+    """Load metadata + phase descriptions for all tasks from task.yaml files."""
+    tasks = []
+    if not TASKS_DIR.exists():
+        return tasks
+    for d in sorted(TASKS_DIR.iterdir()):
+        if not d.is_dir() or not (d / "task.yaml").exists():
+            continue
+        data = load_task_yaml(d.name)
+        if not data:
+            continue
+        phases = []
+        for p in data.get("phases", []):
+            phases.append({
+                "id": p.get("id"),
+                "description": p.get("description", ""),
+                "rules": [
+                    {"id": r.get("id", ""), "description": r.get("description", "")}
+                    for r in p.get("rules", [])
+                ],
+            })
+        tasks.append({
+            "task_id": data.get("id", d.name),
+            "task_name": data.get("name", d.name),
+            "description": data.get("description", ""),
+            "difficulty": data.get("difficulty", "unknown"),
+            "total_phases": len(phases),
+            "phases": phases,
+            "interface": data.get("interface", {}),
+            "limits": data.get("limits", {}),
+        })
+    return tasks
+
+
+def get_model_detail(model_label: str) -> dict[str, Any]:
+    """Get all run data for a specific model, enriched with task phase info."""
+    all_data = scan_results()
+    tasks_meta = get_all_tasks_meta()
+    task_phases = {t["task_id"]: t for t in tasks_meta}
+
+    model_results = [
+        r for r in all_data["results"] if r.get("model_label") == model_label
+    ]
+
+    enriched = []
+    for r in model_results:
+        tid = r.get("task_id", "")
+        task_info = task_phases.get(tid, {})
+        phase_descs = {p["id"]: p for p in task_info.get("phases", [])}
+
+        enriched_phases = []
+        for pr in r.get("phase_results", []):
+            pid = pr.get("phase_id")
+            desc = phase_descs.get(pid, {})
+            enriched_phases.append({
+                **pr,
+                "phase_description": desc.get("description", ""),
+                "rules": desc.get("rules", []),
+            })
+
+        enriched.append({
+            **r,
+            "task_description": task_info.get("description", ""),
+            "phase_results": enriched_phases,
+        })
+
+    enriched.sort(key=lambda r: r.get("task_id", ""))
+
+    return {
+        "model_label": model_label,
+        "model_id": model_results[0].get("model_id", "") if model_results else "",
+        "model_tier": model_results[0].get("model_tier", "") if model_results else "",
+        "results": enriched,
+        "all_tasks": all_data["tasks"],
+        "all_models_data": all_data,
+    }
+
+
 class DashboardHandler(SimpleHTTPRequestHandler):
     """Custom handler for dashboard routes."""
 
     def do_GET(self) -> None:
-        if self.path == "/" or self.path == "/index.html":
+        parsed = urlparse(self.path)
+        path = parsed.path
+        qs = parse_qs(parsed.query)
+
+        if path == "/" or path == "/index.html":
             self._serve_file(DASHBOARD_FILE, "text/html")
-        elif self.path == "/api/results":
+        elif path == "/model":
+            self._serve_file(MODEL_FILE, "text/html")
+        elif path == "/dashboard.css":
+            self._serve_file(DASHBOARD_CSS, "text/css")
+        elif path == "/logo-32.png":
+            self._serve_file(LOGO_FILE, "image/png")
+        elif path == "/favicon.ico":
+            self._serve_file(FAVICON_FILE, "image/x-icon")
+        elif path == "/favicon-32x32.png":
+            self._serve_file(FAVICON_PNG, "image/png")
+        elif path == "/api/results":
             self._serve_json(scan_results())
+        elif path == "/api/tasks":
+            self._serve_json(get_all_tasks_meta())
+        elif path == "/api/model":
+            name = qs.get("name", [""])[0]
+            if not name:
+                self.send_error(400, "Missing ?name= parameter")
+                return
+            self._serve_json(get_model_detail(name))
         else:
             self.send_error(404)
 
@@ -100,7 +221,8 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.send_error(500, f"Cannot read {path}")
             return
         self.send_response(200)
-        self.send_header("Content-Type", f"{content_type}; charset=utf-8")
+        ct = f"{content_type}; charset=utf-8" if content_type.startswith("text/") else content_type
+        self.send_header("Content-Type", ct)
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()

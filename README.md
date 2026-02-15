@@ -1,4 +1,4 @@
-# Saotri Bench
+# SaotriBench
 
 <p align="center">
   <img src="assets/saotri-logo.png" alt="SaotriBench" width="400">
@@ -12,7 +12,7 @@ A coding benchmark for evaluating LLM agents on multi-phase programming tasks. T
 
 ```
 +-----------------------------------------------------------+
-|                    Saotri Bench Flow                      |
+|                    SaotriBench Flow                      |
 +-----------------------------------------------------------+
 |                                                           |
 |  +-------+   +------------+   +--------+   +-----------+  |
@@ -74,6 +74,13 @@ python -m saotri_bench.cli <command>
 | `task_02_merge_dicts` | Easy | 4 | Dict merge with type-aware conflict resolution |
 | `task_03_validate_brackets` | Medium | 5 | Bracket validation with changing contract (bool → exception) |
 | `task_04_sort_objects` | Medium | 6 | Object sorting with evolving key format and edge cases |
+| `task_05_text_processor` | Medium | 7 | Text processing with unicode, quoting, and escape handling |
+| `task_06_cache_eviction` | Medium | 8 | LRU cache with TTL, priority, and dirty-write tracking |
+| `task_07_expression_parser` | Medium | 9 | Math expression parser with variables, implicit multiply, right-associativity |
+| `task_08_access_control` | Medium | 10 | RBAC system with ownership, deny-priority, and role inheritance |
+| `task_09_schedule_optimizer` | Hard | 12 | Task scheduler with dependencies, parallelism, and resource constraints |
+| `task_10_data_pipeline` | Hard | 12 | Data transformation pipeline with filtering, aggregation, and joins |
+| `task_11_version_resolver` | Hard | 15 | Semver dependency resolver with ranges, transitive deps, and conflicts |
 
 ## Quick Start
 
@@ -317,7 +324,7 @@ saotri-bench run --task PATH --workspace PATH --single
 
 ## LLM Agent Benchmark
 
-The `agents/` module provides automated benchmarking of LLM models against Saotri Bench tasks via [OpenRouter](https://openrouter.ai/).
+The `agents/` module provides automated benchmarking of LLM models against SaotriBench tasks via [OpenRouter](https://openrouter.ai/).
 
 ### Setup
 
@@ -348,23 +355,65 @@ python -m agents.run_benchmark --list-models
 
 ### Configured models
 
-| Tier | Model | Description |
-|------|-------|-------------|
-| `weak` | Gemma 2 9B | Small model, limited reasoning |
-| `medium` | Llama 3.3 70B | Solid open-source model |
-| `strong` | Claude Sonnet | Top-tier commercial model |
+| Tier | Model | OpenRouter ID |
+|------|-------|---------------|
+| `weak` | Gemma 2 9B | `google/gemma-2-9b-it` |
+| `medium` | Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct` |
+| `strong` | Claude Sonnet | `anthropic/claude-sonnet-4` |
+| `claude-opus` | Claude Opus 4.6 | `anthropic/claude-opus-4.6` |
+| `gemini-pro` | Gemini 3 Pro | `google/gemini-3-pro-preview` |
+| `grok` | Grok 4 | `x-ai/grok-4` |
+| `kimi` | Kimi K2.5 | `moonshotai/kimi-k2.5` |
+| `gpt` | GPT-5.2 Codex | `openai/gpt-5.2-codex` |
+| `minimax` | MiniMax M2.5 | `minimax/minimax-m2.5` |
+| `glm` | GLM 5 | `z-ai/glm-5` |
 
-### Example results
+### Benchmark Results (Strong Tier, Feb 2026)
 
-```
-Task: FizzBuzz Extended [easy] (3 phases)
-Model                Tier     Phases       Attempts   Status     Tokens     Time
-Claude Sonnet        strong   3/3          3          PASS       2783       10.8s
-Llama 3.3 70B        medium   1/3          6          FAIL       7706       27.4s
-Gemma 2 9B           weak     1/3          6          FAIL       7953       13.4s
-```
+12 tasks, 94 total phases. Each model runs all tasks sequentially with up to 5-8 refinement attempts per phase.
 
-Reports are saved to `reports/` as JSON files (per-run details, per-task comparisons, and a full benchmark summary).
+#### Overall Ranking
+
+| # | Model | Tasks Passed | Phases Completed | Phase % |
+|---|-------|-------------|-----------------|---------|
+| 1 | **Claude Opus 4.6** | **6/12** | **53/94** | **56%** |
+| 2 | GPT-5.2 Codex | 4/12 | 45/94 | 48% |
+| 3 | GLM 5 | 4/12 | 41/94 | 44% |
+| 4 | MiniMax M2.5 | 4/12 | 40/94 | 43% |
+| 5 | Kimi K2.5 | 4/12 | 37/94 | 39% |
+| 6 | Gemini 3 Pro | 4/12 | 32/94 | 34% |
+| 7 | Grok 4* | 0/1 | 1/3 | 33% |
+
+*Grok 4 only completed 1 task due to extreme API latency (~6 min/call). See [TECHNICAL_ERRORS.md](TECHNICAL_ERRORS.md).
+
+#### Per-Task Results (phases completed / total phases)
+
+| Task | Difficulty | Claude Opus | GPT-5.2 | GLM 5 | MiniMax | Kimi K2.5 | Gemini 3 |
+|------|-----------|-------------|---------|-------|---------|-----------|----------|
+| FizzBuzz | Easy | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| Transform List | Easy | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| Merge Dicts | Easy | **4/4** | 3/4 | 3/4 | 3/4 | 3/4 | **4/4** |
+| Validate Brackets | Medium | 5/5 | 5/5 | 5/5 | 5/5 | 5/5 | 5/5 |
+| Sort Objects | Medium | **6/6** | 4/6 | **6/6** | 3/6 | 2/6 | 3/6 |
+| Text Processor | Medium | **4/7** | 3/7 | 3/7 | 2/7 | 2/7 | 3/7 |
+| Cache Eviction | Medium | **4/8** | **4/8** | 2/8 | 2/8 | 2/8 | 2/8 |
+| Expression Parser | Medium | **9/9** | **9/9** | 7/9 | **9/9** | **9/9** | 3/9 |
+| Access Control | Medium | 2/10 | **4/10** | 3/10 | **4/10** | 3/10 | 2/10 |
+| Schedule Optimizer | Hard | 2/12 | 2/12 | 1/12 | 2/12 | 1/12 | 1/12 |
+| Data Pipeline | Hard | 3/12 | 3/12 | 3/12 | 2/12 | 2/12 | 2/12 |
+| Version Resolver | Hard | **8/15** | 2/15 | 2/15 | 2/15 | 2/15 | 1/15 |
+
+**Bold** = best result for that task.
+
+#### Key Observations
+
+- **Easy tasks (3-4 phases):** All models pass FizzBuzz, Transform List, and Validate Brackets. These serve as baseline sanity checks.
+- **Medium tasks (5-10 phases):** Significant differentiation begins. Expression Parser is the standout — 4 of 6 models achieve 9/9 phases, indicating strong recursive parsing ability across frontier models.
+- **Hard tasks (12-15 phases):** All models struggle. Only Claude Opus 4.6 reaches 8/15 on Version Resolver; all others plateau at 2-3 phases.
+- **Common failure points:** `list_merge` in Merge Dicts (Phase 3), `escape_handling` in Text Processor, `ttl_expiry` in Cache Eviction, `transitive` dependencies in Version Resolver.
+- **EmptyResponseError** is the dominant infrastructure issue — models hit `max_tokens=4096` on complex tasks. See [TECHNICAL_ERRORS.md](TECHNICAL_ERRORS.md) for details.
+
+Reports are saved to `reports/` as JSON files. See [`TECHNICAL_ERRORS.md`](TECHNICAL_ERRORS.md) for infrastructure errors and [`BENCHMARK_ANALYSIS.md`](BENCHMARK_ANALYSIS.md) for quality analysis.
 
 See [`agents/README.md`](agents/README.md) for full documentation.
 
@@ -387,6 +436,46 @@ To use a different port:
 ```bash
 python serve_dashboard.py --port 9000
 ```
+
+## Benchmark Quality Analysis
+
+### Does SaotriBench measure "internal model building"?
+
+The benchmark's stated goal is to determine whether LLM agents build internal models of projects — inferring hidden structure from feedback rather than just pattern-matching. Results from 7 strong-tier models (Feb 2026) suggest:
+
+**What the benchmark successfully measures:**
+
+1. **Hidden requirement discovery (Phases 0-2 across all tasks):** All models demonstrate the ability to read violation feedback and adjust code accordingly. The Phase 0→1 transition reliably differentiates models — weaker models fail to infer the meaning of scopes like `divisible_by_7`, while stronger ones update their mental model of the problem.
+
+2. **Iterative refinement under constraints:** The benchmark clearly separates models that can iteratively refine from those that thrash. Claude Opus 4.6 achieves 8/15 on Version Resolver by systematically addressing violations, while most models plateau at 2/15 — unable to maintain all prior constraints while adding new ones.
+
+3. **Phase accumulation stress-testing:** The core design — rules accumulate across phases, so Phase N solutions must satisfy all Phase 0..N-1 rules — is effective. This is where models break: they can add new behavior but often regress on previously-passing tests.
+
+**Where results are less conclusive:**
+
+1. **Hard tasks may test algorithmic knowledge more than model-building.** Version Resolver Phase 2 (`transitive` dependencies) blocks every model except Claude Opus. This requires implementing a specific graph algorithm, not inferring requirements from feedback. Similarly, Schedule Optimizer Phase 2 (`parallelism`) requires topological sort knowledge.
+
+2. **The `max_tokens` ceiling creates a confound.** 5 of 7 models hit EmptyResponseError on complex tasks, terminating them prematurely. It's impossible to know if GLM 5 would have passed Expression Parser Phase 8 without the token limit (it achieved 9/9 in one run but 7/9 when constrained). The benchmark may be measuring token efficiency as much as reasoning ability.
+
+3. **Medium tasks show ceiling effects.** Expression Parser is fully solved by 4 of 6 models (9/9), yet the task has 9 phases — this suggests the phases aren't calibrated to differentiate top-tier models on this task type.
+
+**Relevance to the "internal model" question:**
+
+The benchmark provides *indirect* evidence. Models that score higher demonstrate behavior consistent with maintaining an internal model:
+- They don't regress when adding new features (phase accumulation test)
+- They infer correct semantics from scope names (`divisible_by_7` → "add Bazz for multiples of 7")
+- They maintain architectural coherence across refinements
+
+However, the benchmark cannot definitively prove internal model building vs. sophisticated pattern matching. A model could pass by:
+- Memorizing common patterns (FizzBuzz variants, bracket validators)
+- Using the violation scope name as a direct hint (the scope name often reveals the solution)
+- Applying generic "add a conditional" strategies without deeper understanding
+
+**Recommendations for improving benchmark signal:**
+1. **Increase `max_tokens` to 8192+** for all models to remove the token ceiling confound
+2. **Add obfuscated scope names** — use codes like `violation_A3` instead of `divisible_by_7` to test whether models can infer meaning from test case patterns alone
+3. **Add regression-detection phases** — phases that don't add new rules but test whether the model's solution is robust to edge cases of existing rules
+4. **Run multiple trials per model** to account for LLM non-determinism (GLM 5 scored 9/9 and 7/9 on the same task across two runs)
 
 ## The Name: SAOTRI
 

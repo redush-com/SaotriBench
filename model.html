@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Detail — SaotriBench</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<style>
+.back-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.15s ease;
+}
+.back-link:hover { color: var(--accent); }
+
+.model-header {
+  margin-bottom: 28px;
+}
+.model-header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+.model-header .tier-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2px 10px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 16px 0 28px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 18px;
+  min-width: 140px;
+}
+.stat-card .stat-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.stat-card .stat-value {
+  font-size: 18px;
+  font-weight: 600;
+}
+.stat-card .stat-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.insight-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.insight-card h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.insight-card .insight-item {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.insight-card .insight-item .label {
+  color: var(--text-dim);
+}
+.insight-good { color: var(--green); }
+.insight-bad { color: var(--red); }
+.insight-neutral { color: var(--orange); }
+
+.task-row {
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.task-row:hover td {
+  background: rgba(88,166,255,0.04) !important;
+}
+.task-row td:first-child::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 9px;
+  color: var(--text-dim);
+  transition: transform 0.15s ease;
+}
+.task-row.expanded td:first-child::before {
+  transform: rotate(90deg);
+}
+
+.phase-detail-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border);
+}
+.phase-detail-row.hidden { display: none; }
+
+.phase-detail {
+  padding: 10px 16px 10px 36px;
+  background: var(--bg);
+}
+.phase-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.phase-item:last-child { border-bottom: none; }
+
+.phase-id {
+  font-weight: 600;
+  min-width: 24px;
+  color: var(--text-dim);
+}
+.phase-desc {
+  flex: 1;
+  color: var(--text);
+}
+.phase-status {
+  font-weight: 600;
+  min-width: 80px;
+  text-align: right;
+}
+.phase-status.pass { color: var(--green); }
+.phase-status.fail { color: var(--red); }
+.phase-status.pending { color: var(--gray); }
+
+.phase-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.error-log {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.error-log .log-entry {
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.5);
+}
+.error-log .log-entry:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 style="font-size:20px;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap;">
+    <a href="https://saotri.com" class="home-link"><img src="/logo-32.png" alt="" width="32" height="32" class="logo">SaotriBench</a>
+    — Model Detail
+  </h1>
+  <a href="/" class="back-link">Back to Dashboard</a>
+</header>
+
+<div id="content" class="loading">Loading model data...</div>
+
+<script>
+const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5 };
+
+function fmt(n, d = 1) { return Number(n).toFixed(d); }
+function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
+function fmtDuration(s) {
+  if (s < 60) return fmt(s, 0) + 's';
+  if (s < 3600) return fmt(s / 60, 1) + 'm';
+  return fmt(s / 3600, 1) + 'h';
+}
+function fmtTokens(n) {
+  if (n >= 1_000_000) return fmt(n / 1_000_000, 1) + 'M';
+  if (n >= 1_000) return fmt(n / 1_000, 1) + 'K';
+  return String(n);
+}
+function diffClass(d) { return 'diff-' + (d || 'easy').toLowerCase(); }
+
+function progressBar(ratio) {
+  const pct = Math.round(ratio * 100);
+  let cls = 'green';
+  if (ratio < 0.5) cls = 'red';
+  else if (ratio < 0.8) cls = 'orange';
+  return `<span class="progress-bar"><span class="progress-fill ${cls}" style="width:${pct}%"></span></span>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Insights computation ─────────────────────────────────
+
+function computeInsights(modelData) {
+  const allData = modelData.all_models_data;
+  const modelLabel = modelData.model_label;
+  const allTasks = allData.tasks;
+  const taskMap = {};
+  for (const t of allTasks) taskMap[t.task_id] = t;
+
+  // Build per-model stats for comparison
+  const modelStats = {};
+  for (const m of allData.models) {
+    modelStats[m] = { passed: 0, tested: 0, tokens: 0, duration: 0, phases: 0, byDiff: {} };
+    for (const d of ['easy','medium','hard']) modelStats[m].byDiff[d] = { passed: 0, total: 0 };
+  }
+  for (const r of allData.results) {
+    const m = r.model_label;
+    if (!modelStats[m]) continue;
+    const s = modelStats[m];
+    s.tested++;
+    s.tokens += r.token_usage?.total_tokens || 0;
+    s.duration += r.total_duration_seconds || 0;
+    s.phases += r.phases_completed || 0;
+    const diff = (taskMap[r.task_id]?.difficulty || 'easy').toLowerCase();
+    if (s.byDiff[diff]) s.byDiff[diff].total++;
+    if (r.final_status === 'completed') {
+      s.passed++;
+      if (s.byDiff[diff]) s.byDiff[diff].passed++;
+    }
+  }
+
+  const me = modelStats[modelLabel] || { passed: 0, tested: 0, tokens: 0, duration: 0, phases: 0, byDiff: {} };
+  const others = Object.entries(modelStats).filter(([k]) => k !== modelLabel).map(([,v]) => v);
+
+  const insights = { strengths: [], efficiency: [], speed: [], weakSpots: [] };
+
+  // Difficulty strengths/weaknesses
+  for (const diff of ['easy', 'medium', 'hard']) {
+    const myD = me.byDiff[diff] || { passed: 0, total: 0 };
+    const myRate = myD.total > 0 ? myD.passed / myD.total : 0;
+    const avgRates = others.filter(o => o.byDiff[diff]?.total > 0).map(o => o.byDiff[diff].passed / o.byDiff[diff].total);
+    const avgRate = avgRates.length > 0 ? avgRates.reduce((a,b) => a+b, 0) / avgRates.length : 0;
+
+    if (myD.total > 0) {
+      const delta = myRate - avgRate;
+      const label = diff.charAt(0).toUpperCase() + diff.slice(1);
+      if (delta > 0.1) {
+        insights.strengths.push(`${label}: ${fmtPct(myRate)} pass rate (+${fmtPct(delta)} vs avg)`);
+      } else if (delta < -0.1) {
+        insights.weakSpots.push(`${label}: ${fmtPct(myRate)} pass rate (${fmtPct(delta)} vs avg)`);
+      }
+    }
+  }
+
+  // Efficiency: tokens per completed phase
+  const myTpp = me.phases > 0 ? me.tokens / me.phases : 0;
+  const otherTpps = others.filter(o => o.phases > 0).map(o => o.tokens / o.phases);
+  const avgTpp = otherTpps.length > 0 ? otherTpps.reduce((a,b) => a+b, 0) / otherTpps.length : 0;
+  if (myTpp > 0 && avgTpp > 0) {
+    const ratio = myTpp / avgTpp;
+    if (ratio < 0.8) {
+      insights.efficiency.push(`${fmtTokens(Math.round(myTpp))} tokens/phase (${Math.round((1 - ratio) * 100)}% more efficient than avg)`);
+    } else if (ratio > 1.2) {
+      insights.efficiency.push(`${fmtTokens(Math.round(myTpp))} tokens/phase (${Math.round((ratio - 1) * 100)}% less efficient than avg)`);
+    } else {
+      insights.efficiency.push(`${fmtTokens(Math.round(myTpp))} tokens/phase (near average)`);
+    }
+  }
+
+  // Speed: duration per tested task
+  const myDpt = me.tested > 0 ? me.duration / me.tested : 0;
+  const otherDpts = others.filter(o => o.tested > 0).map(o => o.duration / o.tested);
+  const avgDpt = otherDpts.length > 0 ? otherDpts.reduce((a,b) => a+b, 0) / otherDpts.length : 0;
+  if (myDpt > 0 && avgDpt > 0) {
+    const ratio = myDpt / avgDpt;
+    if (ratio < 0.8) {
+      insights.speed.push(`${fmtDuration(myDpt)}/task (${Math.round((1 - ratio) * 100)}% faster than avg)`);
+    } else if (ratio > 1.2) {
+      insights.speed.push(`${fmtDuration(myDpt)}/task (${Math.round((ratio - 1) * 100)}% slower than avg)`);
+    } else {
+      insights.speed.push(`${fmtDuration(myDpt)}/task (near average)`);
+    }
+  }
+
+  // Weak spots: tasks where model failed but >50% of others passed
+  for (const r of modelData.results) {
+    if (r.final_status === 'completed') continue;
+    const tid = r.task_id;
+    const othersOnTask = allData.results.filter(x => x.task_id === tid && x.model_label !== modelLabel);
+    const othersPassed = othersOnTask.filter(x => x.final_status === 'completed').length;
+    if (othersOnTask.length > 0 && othersPassed / othersOnTask.length > 0.5) {
+      insights.weakSpots.push(`Failed "${r.task_name}" (${othersPassed}/${othersOnTask.length} others passed)`);
+    }
+  }
+
+  if (insights.strengths.length === 0) insights.strengths.push('No standout strengths detected');
+  if (insights.weakSpots.length === 0) insights.weakSpots.push('No notable weak spots');
+
+  return insights;
+}
+
+// ── Render ────────────────────────────────────────────────
+
+function render(modelData) {
+  const results = modelData.results;
+  const allTasks = modelData.all_tasks;
+  const taskMap = {};
+  for (const t of allTasks) taskMap[t.task_id] = t;
+
+  // Aggregate stats
+  let tasksPassed = 0, totalTokens = 0, totalDuration = 0, phasesCompleted = 0;
+  let weightedScore = 0;
+  const totalTasks = allTasks.length;
+  const totalPhasesAll = allTasks.reduce((s, t) => s + t.total_phases, 0);
+  const maxWeighted = allTasks.reduce((s, t) => s + (DIFF_WEIGHT[(t.difficulty || 'easy').toLowerCase()] || 1), 0);
+
+  for (const r of results) {
+    if (r.final_status === 'completed') {
+      tasksPassed++;
+      const task = taskMap[r.task_id];
+      weightedScore += DIFF_WEIGHT[(task?.difficulty || 'easy').toLowerCase()] || 1;
+    }
+    phasesCompleted += r.phases_completed || 0;
+    totalTokens += r.token_usage?.total_tokens || 0;
+    totalDuration += r.total_duration_seconds || 0;
+  }
+
+  const passRate = totalTasks > 0 ? tasksPassed / totalTasks : 0;
+  const weightedRate = maxWeighted > 0 ? weightedScore / maxWeighted : 0;
+
+  const insights = computeInsights(modelData);
+
+  let html = '';
+
+  // Model header
+  html += `<div class="model-header">
+    <h1>${escHtml(modelData.model_label)}<span class="tier-badge">${escHtml(modelData.model_tier)}</span></h1>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:2px">${escHtml(modelData.model_id)}</div>
+  </div>`;
+
+  // Stats row
+  html += `<div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Weighted Score</div>
+      <div class="stat-value">${fmtPct(weightedRate)}</div>
+      <div class="stat-sub">${weightedScore} / ${maxWeighted} pts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Tasks Passed</div>
+      <div class="stat-value">${tasksPassed} / ${totalTasks}</div>
+      <div class="stat-sub">${fmtPct(passRate)} pass rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Phases Done</div>
+      <div class="stat-value">${phasesCompleted} / ${totalPhasesAll}</div>
+      <div class="stat-sub">${fmtPct(totalPhasesAll > 0 ? phasesCompleted / totalPhasesAll : 0)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Tokens</div>
+      <div class="stat-value">${fmtTokens(totalTokens)}</div>
+      <div class="stat-sub">${totalTokens.toLocaleString()}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Duration</div>
+      <div class="stat-value">${fmtDuration(totalDuration)}</div>
+      <div class="stat-sub">${fmt(totalDuration, 0)}s</div>
+    </div>
+  </div>`;
+
+  // Insights
+  html += `<section><h2>Insights <span class="badge">vs other models</span></h2>
+  <div class="insights-grid">
+    <div class="insight-card">
+      <h3>Strengths</h3>
+      ${insights.strengths.map(s => `<div class="insight-item insight-good">${escHtml(s)}</div>`).join('')}
+    </div>
+    <div class="insight-card">
+      <h3>Efficiency</h3>
+      ${insights.efficiency.map(s => `<div class="insight-item insight-neutral">${escHtml(s)}</div>`).join('')}
+    </div>
+    <div class="insight-card">
+      <h3>Speed</h3>
+      ${insights.speed.map(s => `<div class="insight-item insight-neutral">${escHtml(s)}</div>`).join('')}
+    </div>
+    <div class="insight-card">
+      <h3>Weak Spots</h3>
+      ${insights.weakSpots.map(s => `<div class="insight-item insight-bad">${escHtml(s)}</div>`).join('')}
+    </div>
+  </div></section>`;
+
+  // Task results table
+  // Build a map of results by task_id
+  const resultMap = {};
+  for (const r of results) resultMap[r.task_id] = r;
+
+  // Sort tasks: by difficulty order, then task_id
+  const diffOrder = { easy: 0, medium: 1, hard: 2 };
+  const sortedTasks = [...allTasks].sort((a, b) => {
+    const da = diffOrder[(a.difficulty || 'easy').toLowerCase()] ?? 1;
+    const db = diffOrder[(b.difficulty || 'easy').toLowerCase()] ?? 1;
+    return da - db || a.task_id.localeCompare(b.task_id);
+  });
+
+  html += `<section><h2>Task Results <span class="badge">${results.length} tested / ${totalTasks} total</span></h2>`;
+  html += `<table><thead><tr>
+    <th>Task</th>
+    <th>Difficulty</th>
+    <th class="cell-num">Phases</th>
+    <th>Status</th>
+    <th class="cell-num">Attempts</th>
+    <th class="cell-num">Coverage</th>
+    <th class="cell-num">Tokens</th>
+    <th class="cell-num">Duration</th>
+  </tr></thead><tbody>`;
+
+  for (const task of sortedTasks) {
+    const run = resultMap[task.task_id];
+    const taskIdx = task.task_id.replace('task_', '');
+
+    if (!run) {
+      html += `<tr>
+        <td style="color:var(--gray)">${taskIdx} — ${escHtml(task.task_name)}</td>
+        <td class="${diffClass(task.difficulty)}">${task.difficulty}</td>
+        <td class="cell-num">${task.total_phases}</td>
+        <td class="cell-na">Not tested</td>
+        <td class="cell-na">—</td>
+        <td class="cell-na">—</td>
+        <td class="cell-na">—</td>
+        <td class="cell-na">—</td>
+      </tr>`;
+      continue;
+    }
+
+    const statusCls = run.final_status === 'completed' ? 'cell-pass' :
+                      run.final_status === 'error' ? 'cell-error' : 'cell-fail';
+    const statusLabel = run.final_status === 'completed' ? 'PASS' :
+                        run.final_status === 'error' ? 'ERR' : 'FAIL';
+    const maxCoverage = run.phase_results?.length > 0
+      ? Math.max(...run.phase_results.map(p => p.coverage || 0))
+      : 0;
+
+    const rowId = `task-${task.task_id}`;
+
+    html += `<tr class="task-row" onclick="togglePhases('${rowId}', this)">
+      <td>${taskIdx} — ${escHtml(run.task_name || task.task_name)}</td>
+      <td class="${diffClass(task.difficulty)}">${task.difficulty}</td>
+      <td class="cell-num">${run.phases_completed}/${run.total_phases}</td>
+      <td class="${statusCls}">${statusLabel}</td>
+      <td class="cell-num">${run.total_attempts || 0}</td>
+      <td class="cell-num">${fmtPct(maxCoverage)}</td>
+      <td class="cell-num">${fmtTokens(run.token_usage?.total_tokens || 0)}</td>
+      <td class="cell-num">${fmtDuration(run.total_duration_seconds || 0)}</td>
+    </tr>`;
+
+    // Phase detail row (hidden by default)
+    html += `<tr class="phase-detail-row hidden" id="${rowId}"><td colspan="8"><div class="phase-detail">`;
+
+    if (run.task_description) {
+      html += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;font-style:italic">${escHtml(run.task_description)}</div>`;
+    }
+
+    // Show all phases from task definition, marking completed/failed/pending
+    const phaseResultMap = {};
+    for (const pr of (run.phase_results || [])) phaseResultMap[pr.phase_id] = pr;
+
+    for (let i = 0; i < (run.total_phases || 0); i++) {
+      const pr = phaseResultMap[i];
+      let statusText, statusCls2;
+      if (pr) {
+        if (pr.status === 'completed') {
+          statusText = 'PASS';
+          statusCls2 = 'pass';
+        } else {
+          statusText = 'FAIL';
+          statusCls2 = 'fail';
+        }
+      } else {
+        statusText = 'PENDING';
+        statusCls2 = 'pending';
+      }
+
+      const desc = pr?.phase_description || `Phase ${i}`;
+      const attempts = pr ? pr.attempts : '—';
+      const coverage = pr ? fmtPct(pr.coverage || 0) : '—';
+
+      html += `<div class="phase-item">
+        <span class="phase-id">${i}</span>
+        <span class="phase-desc">
+          <div>${escHtml(desc)}</div>
+          <div class="phase-meta">Attempts: ${attempts} | Coverage: ${coverage}</div>`;
+
+      // Rules
+      if (pr?.rules && pr.rules.length > 0) {
+        html += `<div class="phase-meta">Rules: ${pr.rules.map(r => escHtml(r.description || r.id)).join(', ')}</div>`;
+      }
+
+      // Error log
+      if (pr?.error_log && pr.error_log.length > 0) {
+        html += `<div class="error-log">`;
+        for (const entry of pr.error_log) {
+          html += `<div class="log-entry">${escHtml(entry)}</div>`;
+        }
+        html += `</div>`;
+      } else if (pr && pr.status !== 'completed') {
+        html += `<div class="error-log"><div class="log-entry">No error logs available (run predates log capture)</div></div>`;
+      }
+
+      html += `</span>
+        <span class="phase-status ${statusCls2}">${statusText}</span>
+      </div>`;
+    }
+
+    html += `</div></td></tr>`;
+  }
+
+  html += '</tbody></table></section>';
+
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').classList.remove('loading');
+  document.title = `${modelData.model_label} — SaotriBench`;
+}
+
+function togglePhases(rowId, clickedRow) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  row.classList.toggle('hidden');
+  clickedRow.classList.toggle('expanded');
+}
+
+// ── Fetch & render ───────────────────────────────────────
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name');
+  if (!name) {
+    document.getElementById('content').innerHTML = '<p>No model specified. <a href="/" class="back-link">Back to Dashboard</a></p>';
+    return;
+  }
+
+  try {
+    const resp = await fetch(`/api/model?name=${encodeURIComponent(name)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    if (!data.results || data.results.length === 0) {
+      document.getElementById('content').innerHTML = `<p>No results found for model "${escHtml(name)}". <a href="/" class="back-link">Back to Dashboard</a></p>`;
+      return;
+    }
+
+    render(data);
+  } catch (err) {
+    document.getElementById('content').innerHTML = `<p style="color:var(--red)">Error loading model data: ${escHtml(err.message)}</p>`;
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
