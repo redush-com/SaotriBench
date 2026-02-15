@@ -41,8 +41,8 @@ MODELS: dict[str, ModelConfig] = {
         temperature=0.1,
     ),
     "claude-opus": ModelConfig(
-        id="anthropic/claude-opus-4.5",
-        label="Claude Opus 4.5",
+        id="anthropic/claude-opus-4.6",
+        label="Claude Opus 4.6",
         tier="strong",
         temperature=0.1,
     ),
@@ -65,8 +65,20 @@ MODELS: dict[str, ModelConfig] = {
         temperature=0.1,
     ),
     "gpt": ModelConfig(
-        id="openai/gpt-5.2",
-        label="GPT-5.2",
+        id="openai/gpt-5.2-codex",
+        label="GPT-5.2 Codex",
+        tier="strong",
+        temperature=0.1,
+    ),
+    "minimax": ModelConfig(
+        id="minimax/minimax-m2.5",
+        label="MiniMax M2.5",
+        tier="strong",
+        temperature=0.1,
+    ),
+    "glm": ModelConfig(
+        id="z-ai/glm-5",
+        label="GLM 5",
         tier="strong",
         temperature=0.1,
     ),
