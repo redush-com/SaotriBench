@@ -114,10 +114,18 @@ function totalTaskCount(data) {
 
 // ── Render: Completion Summary ───────────────────────────
 
+const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5 };
+
 function renderSummary(data) {
   const lookup = buildLookup(data);
   const totalTasks = totalTaskCount(data);
   const totalPhasesAll = data.tasks.reduce((s, t) => s + t.total_phases, 0);
+
+  const taskMap = {};
+  for (const t of data.tasks) taskMap[t.task_id] = t;
+
+  const maxWeightedScore = data.tasks.reduce((s, t) =>
+    s + (DIFF_WEIGHT[(t.difficulty || 'easy').toLowerCase()] || 1), 0);
 
   const rows = [];
   for (const model of data.models) {
@@ -128,22 +136,29 @@ function renderSummary(data) {
     let totalTokens = 0;
     let totalDuration = 0;
     let latestTimestamp = '';
+    let weightedScore = 0;
 
     for (const r of Object.values(runs)) {
-      if (r.final_status === 'completed') tasksPassed++;
+      if (r.final_status === 'completed') {
+        tasksPassed++;
+        const task = taskMap[r.task_id];
+        weightedScore += DIFF_WEIGHT[(task?.difficulty || 'easy').toLowerCase()] || 1;
+      }
       phasesCompleted += r.phases_completed;
       totalTokens += r.token_usage?.total_tokens || 0;
       totalDuration += r.total_duration_seconds || 0;
       if (r.timestamp && r.timestamp > latestTimestamp) latestTimestamp = r.timestamp;
     }
 
-    const passRate = tasksTested > 0 ? tasksPassed / tasksTested : 0;
+    const passRate = totalTasks > 0 ? tasksPassed / totalTasks : 0;
     const phaseRate = totalPhasesAll > 0 ? phasesCompleted / totalPhasesAll : 0;
+    const weightedRate = maxWeightedScore > 0 ? weightedScore / maxWeightedScore : 0;
     const incomplete = tasksTested < totalTasks;
 
     rows.push({
-      model, tasksTested, tasksPassed, passRate,
+      model, tasksTested, tasksPassed, totalTasks, passRate,
       phasesCompleted, totalPhasesAll, phaseRate,
+      weightedScore, maxWeightedScore, weightedRate,
       totalTokens, totalDuration, incomplete, latestTimestamp
     });
   }
@@ -151,12 +166,13 @@ function renderSummary(data) {
   if (summarySort === 'recent') {
     rows.sort((a, b) => b.latestTimestamp.localeCompare(a.latestTimestamp));
   } else {
-    rows.sort((a, b) => b.passRate - a.passRate || b.phasesCompleted - a.phasesCompleted);
+    rows.sort((a, b) => b.weightedRate - a.weightedRate || b.phasesCompleted - a.phasesCompleted);
   }
 
   let html = `<table>
     <thead><tr>
       <th>Model</th>
+      <th class="cell-num">Weighted Score</th>
       <th class="cell-num">Tasks Passed</th>
       <th class="cell-num">Pass Rate</th>
       <th class="cell-num">Phases Done</th>
@@ -169,7 +185,8 @@ function renderSummary(data) {
     const star = r.incomplete ? ' *' : '';
     html += `<tr>
       <td>${r.model}${star}</td>
-      <td class="cell-num">${r.tasksPassed} / ${r.tasksTested}${star} ${progressBar(r.passRate)}</td>
+      <td class="cell-num">${fmtPct(r.weightedRate)} ${progressBar(r.weightedRate)}</td>
+      <td class="cell-num">${r.tasksPassed} / ${r.totalTasks}</td>
       <td class="cell-num">${fmtPct(r.passRate)}</td>
       <td class="cell-num">${r.phasesCompleted} / ${r.totalPhasesAll}</td>
       <td class="cell-num">${fmtPct(r.phaseRate)}</td>
@@ -184,6 +201,7 @@ function renderSummary(data) {
   if (incompleteModels.length > 0) {
     html += `<div class="footnote">* Not all tasks tested yet: ${incompleteModels.join(', ')}</div>`;
   }
+  html += `<div class="footnote">Weighted score: easy\u00d71, medium\u00d73, hard\u00d75</div>`;
 
   document.getElementById('summaryBadge').textContent = `${rows.length} models`;
   document.getElementById('summaryTable').innerHTML = html;
