@@ -1,4 +1,4 @@
-# Saotri Bench
+# SaotriBench
 
 <p align="center">
   <img src="assets/saotri-logo.png" alt="SaotriBench" width="400">
@@ -12,7 +12,7 @@ A coding benchmark for evaluating LLM agents on multi-phase programming tasks. T
 
 ```
 +-----------------------------------------------------------+
-|                    Saotri Bench Flow                      |
+|                    SaotriBench Flow                      |
 +-----------------------------------------------------------+
 |                                                           |
 |  +-------+   +------------+   +--------+   +-----------+  |
@@ -317,7 +317,7 @@ saotri-bench run --task PATH --workspace PATH --single
 
 ## LLM Agent Benchmark
 
-The `agents/` module provides automated benchmarking of LLM models against Saotri Bench tasks via [OpenRouter](https://openrouter.ai/).
+The `agents/` module provides automated benchmarking of LLM models against SaotriBench tasks via [OpenRouter](https://openrouter.ai/).
 
 ### Setup
 
