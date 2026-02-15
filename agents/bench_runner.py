@@ -16,7 +16,7 @@ from typing import Any
 
 from .agent import CodingAgent
 from .config import ModelConfig, get_model, list_models
-from .llm_client import OpenRouterClient
+from .llm_client import OpenRouterClient, ResponseTimeoutError
 
 # Add parent to path so we can import saotri_bench
 import sys
@@ -40,7 +40,7 @@ class RunResult:
     total_phases: int
     phases_completed: int
     total_attempts: int
-    final_status: str  # "completed" | "failed"
+    final_status: str  # "completed" | "failed" | "timeout" | "error"
     phase_results: list[dict[str, Any]]
     token_usage: dict[str, int]
     total_duration_seconds: float
@@ -244,6 +244,10 @@ def run_agent_on_task(
             if verbose:
                 print(f"  Refined solution ({len(code)} chars)")
 
+    except ResponseTimeoutError as e:
+        if verbose:
+            print(f"\n  TIMEOUT: {e}")
+        final_status = "timeout"
     except Exception as e:
         if verbose:
             print(f"\n  AGENT ERROR: {e}")
