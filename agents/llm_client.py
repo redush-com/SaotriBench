@@ -17,6 +17,10 @@ class EmptyResponseError(Exception):
     """Raised when the model returns empty or null content."""
 
 
+class ResponseTimeoutError(Exception):
+    """Raised when the model exceeds its response time limit."""
+
+
 @dataclass
 class LLMResponse:
     """Response from LLM API."""
@@ -42,7 +46,7 @@ class OpenRouterClient:
                 "OpenRouter API key required. Set OPENROUTER_API_KEY env var "
                 "or pass api_key parameter."
             )
-        self.timeout = timeout
+        self.timeout = timeout  # Fallback when model has no response_timeout
 
     def chat(
         self,
@@ -85,6 +89,7 @@ class OpenRouterClient:
 
         Raises:
             EmptyResponseError: If model returns empty/null content
+            ResponseTimeoutError: If model exceeds its response_timeout
         """
         payload = {
             "model": model.id,
@@ -100,10 +105,19 @@ class OpenRouterClient:
             "X-Title": "Saotri Bench Agent",
         }
 
-        with httpx.Client(timeout=self.timeout) as client:
-            response = client.post(self.BASE_URL, json=payload, headers=headers)
-            response.raise_for_status()
-            data = response.json()
+        # Use model-specific timeout if set, otherwise fall back to client default
+        request_timeout = getattr(model, "response_timeout", None) or self.timeout
+
+        try:
+            with httpx.Client(timeout=request_timeout) as client:
+                response = client.post(self.BASE_URL, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+        except httpx.TimeoutException:
+            raise ResponseTimeoutError(
+                f"Model {model.id} ({model.label}) exceeded response timeout "
+                f"of {request_timeout:.0f}s"
+            )
 
         # Parse response
         choice = data["choices"][0]

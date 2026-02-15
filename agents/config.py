@@ -14,6 +14,7 @@ class ModelConfig:
     tier: str  # "weak", "medium", "strong"
     max_tokens: int = 4096
     temperature: float = 0.2
+    response_timeout: float = 120.0  # Max seconds to wait for a single LLM response
 
 
 # Models chosen to show clear capability differences:
@@ -45,6 +46,7 @@ MODELS: dict[str, ModelConfig] = {
         label="Claude Opus 4.6",
         tier="strong",
         temperature=0.1,
+        response_timeout=150.0,  # Reasoning model, allow a bit more time
     ),
     "gemini-pro": ModelConfig(
         id="google/gemini-3-pro-preview",
@@ -58,6 +60,7 @@ MODELS: dict[str, ModelConfig] = {
         label="Grok 4",
         tier="strong",
         temperature=0.1,
+        response_timeout=180.0,  # Grok 4 is slow; cap at 3 minutes
     ),
     "kimi": ModelConfig(
         id="moonshotai/kimi-k2.5",

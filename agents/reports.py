@@ -195,7 +195,8 @@ class ReportManager:
                 phases_str = f"{r.phases_completed}/{r.total_phases}"
                 tokens_str = str(r.token_usage["total_tokens"])
                 time_str = f"{r.total_duration_seconds:.1f}s"
-                status_icon = "PASS" if r.final_status == "completed" else "FAIL"
+                status_map = {"completed": "PASS", "timeout": "TIME"}
+                status_icon = status_map.get(r.final_status, "FAIL")
 
                 print(
                     f"  {r.model_label:<20} {r.model_tier:<8} {phases_str:<12} "
