@@ -58,7 +58,8 @@ def _run_single(
     verbose: bool,
 ) -> RunResult | None:
     """Run a single model on a single task with an isolated workspace."""
-    workspace_dir = workspace_base / f"{task_dir.name}_{model.tier}"
+    model_slug = model.id.replace("/", "_")
+    workspace_dir = workspace_base / f"{task_dir.name}_{model_slug}"
 
     try:
         result = run_agent_on_task(

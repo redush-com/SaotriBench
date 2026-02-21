@@ -113,7 +113,7 @@ MODELS: dict[str, ModelConfig] = {
         max_tokens=8192,
     ),
     "trinity": ModelConfig(
-        id="arcee-ai/trinity-large-preview",
+        id="arcee-ai/trinity-large-preview:free",
         label="Trinity Large",
         tier="strong",
         temperature=0.1,
