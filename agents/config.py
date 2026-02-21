@@ -23,23 +23,11 @@ class ModelConfig:
 # - Strong: top-tier commercial model
 # - Additional frontier models for broader comparison
 MODELS: dict[str, ModelConfig] = {
-    "weak": ModelConfig(
-        id="google/gemma-2-9b-it",
-        label="Gemma 2 9B",
-        tier="weak",
-        temperature=0.3,
-    ),
     "medium": ModelConfig(
         id="meta-llama/llama-3.3-70b-instruct",
         label="Llama 3.3 70B",
         tier="weak",
         temperature=0.2,
-    ),
-    "strong": ModelConfig(
-        id="anthropic/claude-sonnet-4",
-        label="Claude Sonnet",
-        tier="medium",
-        temperature=0.1,
     ),
     "claude-opus": ModelConfig(
         id="anthropic/claude-opus-4.6",
@@ -48,13 +36,6 @@ MODELS: dict[str, ModelConfig] = {
         temperature=0.1,
         max_tokens=8192,
         response_timeout=150.0,  # Reasoning model, allow a bit more time
-    ),
-    "gemini-pro": ModelConfig(
-        id="google/gemini-3-pro-preview",
-        label="Gemini 3 Pro",
-        tier="strong",
-        temperature=0.1,
-        max_tokens=8192,
     ),
     "kimi": ModelConfig(
         id="moonshotai/kimi-k2.5",
