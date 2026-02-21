@@ -55,13 +55,6 @@ MODELS: dict[str, ModelConfig] = {
         temperature=0.1,
         max_tokens=8192,
     ),
-    "grok": ModelConfig(
-        id="x-ai/grok-4",
-        label="Grok 4",
-        tier="strong",
-        temperature=0.1,
-        response_timeout=180.0,  # Grok 4 is slow; cap at 3 minutes
-    ),
     "kimi": ModelConfig(
         id="moonshotai/kimi-k2.5",
         label="Kimi K2.5",

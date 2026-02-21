@@ -362,7 +362,6 @@ python -m agents.run_benchmark --list-models
 | `strong` | Claude Sonnet | `anthropic/claude-sonnet-4` |
 | `claude-opus` | Claude Opus 4.6 | `anthropic/claude-opus-4.6` |
 | `gemini-pro` | Gemini 3 Pro | `google/gemini-3-pro-preview` |
-| `grok` | Grok 4 | `x-ai/grok-4` |
 | `kimi` | Kimi K2.5 | `moonshotai/kimi-k2.5` |
 | `gpt` | GPT-5.2 Codex | `openai/gpt-5.2-codex` |
 | `minimax` | MiniMax M2.5 | `minimax/minimax-m2.5` |
@@ -382,9 +381,6 @@ python -m agents.run_benchmark --list-models
 | 4 | MiniMax M2.5 | 4/12 | 40/94 | 43% |
 | 5 | Kimi K2.5 | 4/12 | 37/94 | 39% |
 | 6 | Gemini 3 Pro | 4/12 | 32/94 | 34% |
-| 7 | Grok 4* | 0/1 | 1/3 | 33% |
-
-*Grok 4 only completed 1 task due to extreme API latency (~6 min/call). See [TECHNICAL_ERRORS.md](TECHNICAL_ERRORS.md).
 
 #### Per-Task Results (phases completed / total phases)
 
