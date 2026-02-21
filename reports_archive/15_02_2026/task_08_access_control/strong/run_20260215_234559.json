@@ -1,0 +1,51 @@
+{
+  "model_id": "z-ai/glm-5",
+  "model_label": "GLM 5",
+  "model_tier": "strong",
+  "task_id": "task_08_access_control",
+  "task_name": "Access Control",
+  "difficulty": "medium",
+  "total_phases": 10,
+  "phases_completed": 4,
+  "total_attempts": 12,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 4,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.9
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 49753,
+    "completion_tokens": 14691,
+    "total_tokens": 64444
+  },
+  "total_duration_seconds": 638.7040455341339,
+  "timestamp": "2026-02-15T20:45:59.854540+00:00"
+}

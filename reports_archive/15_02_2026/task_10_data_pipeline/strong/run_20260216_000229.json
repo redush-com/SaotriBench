@@ -1,0 +1,45 @@
+{
+  "model_id": "z-ai/glm-5",
+  "model_label": "GLM 5",
+  "model_tier": "strong",
+  "task_id": "task_10_data_pipeline",
+  "task_name": "Data Pipeline",
+  "difficulty": "hard",
+  "total_phases": 12,
+  "phases_completed": 3,
+  "total_attempts": 11,
+  "final_status": "error",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 7,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 3,
+      "coverage": 0.6
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 41497,
+    "completion_tokens": 10374,
+    "total_tokens": 51871
+  },
+  "total_duration_seconds": 669.6427915096283,
+  "timestamp": "2026-02-15T21:02:29.569544+00:00"
+}

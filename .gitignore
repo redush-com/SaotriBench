@@ -26,9 +26,6 @@ env/
 # Workspace (runtime artifacts)
 workspace/
 
-# Benchmark reports (generated)
-reports/
-
 # Environment variables
 .env
 

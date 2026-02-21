@@ -1,0 +1,51 @@
+{
+  "model_id": "moonshotai/kimi-k2.5",
+  "model_label": "Kimi K2.5",
+  "model_tier": "strong",
+  "task_id": "task_03_validate_brackets",
+  "task_name": "Validate Brackets",
+  "difficulty": "medium",
+  "total_phases": 5,
+  "phases_completed": 5,
+  "total_attempts": 3,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 1219,
+    "completion_tokens": 11240,
+    "total_tokens": 12459
+  },
+  "total_duration_seconds": 241.71239113807678,
+  "timestamp": "2026-02-15T15:30:12.363556+00:00"
+}

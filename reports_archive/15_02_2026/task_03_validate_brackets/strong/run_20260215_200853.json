@@ -1,0 +1,51 @@
+{
+  "model_id": "openai/gpt-5.2-codex",
+  "model_label": "GPT-5.2 Codex",
+  "model_tier": "strong",
+  "task_id": "task_03_validate_brackets",
+  "task_name": "Validate Brackets",
+  "difficulty": "medium",
+  "total_phases": 5,
+  "phases_completed": 5,
+  "total_attempts": 3,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 1234,
+    "completion_tokens": 1504,
+    "total_tokens": 2738
+  },
+  "total_duration_seconds": 27.134353399276733,
+  "timestamp": "2026-02-15T17:08:53.398448+00:00"
+}

@@ -1,0 +1,39 @@
+{
+  "model_id": "minimax/minimax-m2.5",
+  "model_label": "MiniMax M2.5",
+  "model_tier": "strong",
+  "task_id": "task_11_version_resolver",
+  "task_name": "Version Resolver",
+  "difficulty": "hard",
+  "total_phases": 15,
+  "phases_completed": 2,
+  "total_attempts": 13,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 4,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "failed",
+      "attempts": 8,
+      "coverage": 0.8
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 127190,
+    "completion_tokens": 18930,
+    "total_tokens": 146120
+  },
+  "total_duration_seconds": 431.51402378082275,
+  "timestamp": "2026-02-15T20:00:55.134872+00:00"
+}

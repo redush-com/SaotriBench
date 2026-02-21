@@ -1,0 +1,39 @@
+{
+  "model_id": "moonshotai/kimi-k2.5",
+  "model_label": "Kimi K2.5",
+  "model_tier": "strong",
+  "task_id": "task_00_fizzbuzz",
+  "task_name": "FizzBuzz Extended",
+  "difficulty": "easy",
+  "total_phases": 3,
+  "phases_completed": 3,
+  "total_attempts": 6,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 5,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 7696,
+    "completion_tokens": 4642,
+    "total_tokens": 12338
+  },
+  "total_duration_seconds": 166.8120472431183,
+  "timestamp": "2026-02-15T15:14:14.565438+00:00"
+}

@@ -1,0 +1,39 @@
+{
+  "model_id": "anthropic/claude-opus-4.6",
+  "model_label": "Claude Opus 4.6",
+  "model_tier": "strong",
+  "task_id": "task_01_transform_list",
+  "task_name": "Transform List",
+  "difficulty": "easy",
+  "total_phases": 3,
+  "phases_completed": 3,
+  "total_attempts": 4,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 5329,
+    "completion_tokens": 1403,
+    "total_tokens": 6732
+  },
+  "total_duration_seconds": 30.607428312301636,
+  "timestamp": "2026-02-15T13:39:40.455035+00:00"
+}

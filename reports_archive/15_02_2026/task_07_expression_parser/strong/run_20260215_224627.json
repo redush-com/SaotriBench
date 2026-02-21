@@ -1,0 +1,45 @@
+{
+  "model_id": "minimax/minimax-m2.5",
+  "model_label": "MiniMax M2.5",
+  "model_tier": "strong",
+  "task_id": "task_07_expression_parser",
+  "task_name": "Expression Parser",
+  "difficulty": "medium",
+  "total_phases": 9,
+  "phases_completed": 3,
+  "total_attempts": 2,
+  "final_status": "error",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 0,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 468,
+    "completion_tokens": 2906,
+    "total_tokens": 3374
+  },
+  "total_duration_seconds": 180.36560082435608,
+  "timestamp": "2026-02-15T19:46:27.108033+00:00"
+}

@@ -1,0 +1,39 @@
+{
+  "model_id": "minimax/minimax-m2.5",
+  "model_label": "MiniMax M2.5",
+  "model_tier": "strong",
+  "task_id": "task_09_schedule_optimizer",
+  "task_name": "Schedule Optimizer",
+  "difficulty": "hard",
+  "total_phases": 12,
+  "phases_completed": 2,
+  "total_attempts": 12,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 3,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "failed",
+      "attempts": 8,
+      "coverage": 0.4
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 96462,
+    "completion_tokens": 13631,
+    "total_tokens": 110093
+  },
+  "total_duration_seconds": 293.1884195804596,
+  "timestamp": "2026-02-15T19:57:24.852411+00:00"
+}

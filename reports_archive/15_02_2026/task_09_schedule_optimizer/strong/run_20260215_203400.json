@@ -1,0 +1,39 @@
+{
+  "model_id": "openai/gpt-5.2-codex",
+  "model_label": "GPT-5.2 Codex",
+  "model_tier": "strong",
+  "task_id": "task_09_schedule_optimizer",
+  "task_name": "Schedule Optimizer",
+  "difficulty": "hard",
+  "total_phases": 12,
+  "phases_completed": 2,
+  "total_attempts": 11,
+  "final_status": "error",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "failed",
+      "attempts": 8,
+      "coverage": 0.8
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 82382,
+    "completion_tokens": 28249,
+    "total_tokens": 110631
+  },
+  "total_duration_seconds": 825.8176259994507,
+  "timestamp": "2026-02-15T17:34:00.288701+00:00"
+}

@@ -1,0 +1,45 @@
+{
+  "model_id": "z-ai/glm-5",
+  "model_label": "GLM 5",
+  "model_tier": "strong",
+  "task_id": "task_05_text_processor",
+  "task_name": "Text Processor",
+  "difficulty": "medium",
+  "total_phases": 7,
+  "phases_completed": 3,
+  "total_attempts": 9,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.9375
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 25745,
+    "completion_tokens": 15981,
+    "total_tokens": 41726
+  },
+  "total_duration_seconds": 592.7958271503448,
+  "timestamp": "2026-02-15T20:26:42.484952+00:00"
+}

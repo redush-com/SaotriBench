@@ -1,0 +1,45 @@
+{
+  "model_id": "minimax/minimax-m2.5",
+  "model_label": "MiniMax M2.5",
+  "model_tier": "strong",
+  "task_id": "task_02_merge_dicts",
+  "task_name": "Merge Dictionaries",
+  "difficulty": "easy",
+  "total_phases": 4,
+  "phases_completed": 3,
+  "total_attempts": 9,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.8421052631578947
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 34946,
+    "completion_tokens": 6865,
+    "total_tokens": 41811
+  },
+  "total_duration_seconds": 186.4672167301178,
+  "timestamp": "2026-02-15T17:19:02.739713+00:00"
+}

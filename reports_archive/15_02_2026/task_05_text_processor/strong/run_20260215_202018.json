@@ -1,0 +1,45 @@
+{
+  "model_id": "openai/gpt-5.2-codex",
+  "model_label": "GPT-5.2 Codex",
+  "model_tier": "strong",
+  "task_id": "task_05_text_processor",
+  "task_name": "Text Processor",
+  "difficulty": "medium",
+  "total_phases": 7,
+  "phases_completed": 3,
+  "total_attempts": 8,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.75
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 22088,
+    "completion_tokens": 12641,
+    "total_tokens": 34729
+  },
+  "total_duration_seconds": 208.3378074169159,
+  "timestamp": "2026-02-15T17:20:18.631701+00:00"
+}

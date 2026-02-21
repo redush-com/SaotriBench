@@ -1,0 +1,45 @@
+{
+  "model_id": "moonshotai/kimi-k2.5",
+  "model_label": "Kimi K2.5",
+  "model_tier": "strong",
+  "task_id": "task_08_access_control",
+  "task_name": "Access Control",
+  "difficulty": "medium",
+  "total_phases": 10,
+  "phases_completed": 3,
+  "total_attempts": 8,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.875
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 17616,
+    "completion_tokens": 11314,
+    "total_tokens": 28930
+  },
+  "total_duration_seconds": 798.9888153076172,
+  "timestamp": "2026-02-15T16:40:04.858539+00:00"
+}

@@ -1,0 +1,39 @@
+{
+  "model_id": "google/gemini-3-pro-preview",
+  "model_label": "Gemini 3 Pro",
+  "model_tier": "strong",
+  "task_id": "task_10_data_pipeline",
+  "task_name": "Data Pipeline",
+  "difficulty": "hard",
+  "total_phases": 12,
+  "phases_completed": 2,
+  "total_attempts": 9,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "failed",
+      "attempts": 8,
+      "coverage": 0.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 26242,
+    "completion_tokens": 33007,
+    "total_tokens": 59249
+  },
+  "total_duration_seconds": 366.962158203125,
+  "timestamp": "2026-02-14T23:04:01.538684+00:00"
+}
