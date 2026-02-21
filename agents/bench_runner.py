@@ -243,7 +243,7 @@ def run_agent_on_task(
                     # Need to refine for new phase
                     feedback_data = json.loads(
                         runner.feedback_file.read_text(encoding="utf-8")
-                    ) if runner.feedback_file.exists() else implicit_fb.to_dict()
+                    ) if runner.feedback_file.exists() else runner._obfuscate_feedback_dict(implicit_fb.to_dict())
 
                     # Read phase.json for phase transition context
                     phase_data = json.loads(
@@ -263,8 +263,10 @@ def run_agent_on_task(
                         print("\n  ALL PHASES COMPLETED!")
                     break
 
-            # Not valid yet — refine
-            feedback_data = feedback.to_dict()
+            # Not valid yet — refine (read from file to get obfuscated scopes)
+            feedback_data = json.loads(
+                runner.feedback_file.read_text(encoding="utf-8")
+            )
             code = agent.refine_solution(feedback_data)
             agent.write_solution(code)
 
