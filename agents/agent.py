@@ -80,6 +80,61 @@ class CodingAgent:
         except json.JSONDecodeError:
             return {}
 
+    @staticmethod
+    def _summarize_middle_turns(messages: list[dict[str, str]]) -> str:
+        """Compress discarded middle turns into a concise summary.
+
+        Extracts key signals (violations, scopes, errors) from user feedback
+        messages so the model retains awareness of past failures without the
+        full conversation weight.
+        """
+        if not messages:
+            return ""
+
+        violations_seen: dict[str, set[str]] = {}  # rule_id -> {scopes}
+        errors_seen: list[str] = []
+        phases_seen: set[str] = set()
+        attempt_count = 0
+
+        for msg in messages:
+            if msg["role"] != "user":
+                continue
+            content = msg["content"]
+            attempt_count += 1
+
+            # Extract phase references
+            for line in content.split("\n"):
+                line_stripped = line.strip()
+                if line_stripped.startswith("## Current Phase:"):
+                    phases_seen.add(line_stripped.split(":", 1)[1].strip())
+                elif line_stripped.startswith("- Rule '"):
+                    # Parse: "- Rule 'rule_id' failed on scope 'scope' (N times)"
+                    parts = line_stripped.split("'")
+                    if len(parts) >= 4:
+                        rule_id = parts[1]
+                        scope = parts[3]
+                        violations_seen.setdefault(rule_id, set()).add(scope)
+                elif line_stripped.startswith("## ERROR:"):
+                    errors_seen.append(line_stripped.replace("## ERROR: ", ""))
+
+        if not violations_seen and not errors_seen:
+            return ""
+
+        summary_parts = [
+            f"[Context from {attempt_count} earlier attempts, "
+            f"phases {', '.join(sorted(phases_seen)) if phases_seen else 'unknown'}]"
+        ]
+
+        if violations_seen:
+            summary_parts.append("Previously encountered violations:")
+            for rule_id, scopes in violations_seen.items():
+                summary_parts.append(f"  - Rule '{rule_id}' on scopes: {', '.join(sorted(scopes))}")
+
+        if errors_seen:
+            summary_parts.append("Errors encountered: " + "; ".join(errors_seen[:5]))
+
+        return "\n".join(summary_parts)
+
     def _build_initial_prompt(self) -> str:
         """Build the initial prompt from workspace files."""
         problem = self._read_file("problem.md")
@@ -238,14 +293,20 @@ Write the complete function implementation. Output ONLY the code in a ```python 
         user_prompt = self._build_refinement_prompt(feedback)
 
         # Keep conversation context but limit to avoid token overflow.
-        # Models with large context (Gemini, Grok) benefit from more history;
-        # we keep system + initial exchange + recent turns.
+        # Strategy: keep system + first exchange + a compact summary of
+        # discarded middle turns + the most recent turns.
         max_history = 20
+        recent_keep = 6  # last 3 user/assistant pairs
+        prefix_keep = 3  # system + first user + first assistant
         if len(self.conversation_history) > max_history:
-            # Keep system + first prompt/response + last 6 turns
+            middle = self.conversation_history[prefix_keep:-recent_keep]
+            summary = self._summarize_middle_turns(middle)
             self.conversation_history = (
-                self.conversation_history[:3]
-                + self.conversation_history[-6:]
+                self.conversation_history[:prefix_keep]
+                + ([{"role": "user", "content": summary},
+                    {"role": "assistant", "content": "Understood, I'll keep this context in mind."}]
+                   if summary else [])
+                + self.conversation_history[-recent_keep:]
             )
 
         self.conversation_history.append({"role": "user", "content": user_prompt})
