@@ -84,6 +84,41 @@ MODELS: dict[str, ModelConfig] = {
         temperature=0.1,
         max_tokens=8192,
     ),
+    "claude-sonnet": ModelConfig(
+        id="anthropic/claude-sonnet-4.6",
+        label="Claude Sonnet 4.6",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "gemini-3.1": ModelConfig(
+        id="google/gemini-3.1-pro-preview",
+        label="Gemini 3.1 Pro",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "deepseek": ModelConfig(
+        id="deepseek/deepseek-v3.2",
+        label="DeepSeek V3.2",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "grok": ModelConfig(
+        id="x-ai/grok-4.1-fast",
+        label="Grok 4.1 Fast",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "trinity": ModelConfig(
+        id="arcee-ai/trinity-large-preview",
+        label="Trinity Large",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
 }
 
 

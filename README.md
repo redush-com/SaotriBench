@@ -366,6 +366,11 @@ python -m agents.run_benchmark --list-models
 | `gpt` | GPT-5.2 Codex | `openai/gpt-5.2-codex` |
 | `minimax` | MiniMax M2.5 | `minimax/minimax-m2.5` |
 | `glm` | GLM 5 | `z-ai/glm-5` |
+| `claude-sonnet` | Claude Sonnet 4.6 | `anthropic/claude-sonnet-4.6` |
+| `gemini-3.1` | Gemini 3.1 Pro | `google/gemini-3.1-pro-preview` |
+| `deepseek` | DeepSeek V3.2 | `deepseek/deepseek-v3.2` |
+| `grok` | Grok 4.1 Fast | `x-ai/grok-4.1-fast` |
+| `trinity` | Trinity Large | `arcee-ai/trinity-large-preview` |
 
 ### Benchmark Results (Strong Tier, Feb 2026)
 
