@@ -562,12 +562,27 @@ async function init() {
   }
 
   try {
-    const resp = await fetch(`/api/model?name=${encodeURIComponent(name)}`);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
+    const [modelResp, tasksResp] = await Promise.all([
+      fetch(`/api/model?name=${encodeURIComponent(name)}`),
+      fetch(`/api/tasks`)
+    ]);
+    
+    if (!modelResp.ok) throw new Error(`HTTP ${modelResp.status}`);
+    if (!tasksResp.ok) throw new Error(`HTTP ${tasksResp.status}`);
+    
+    const data = await modelResp.json();
+    const allTasks = await tasksResp.json();
+    
+    // Ensure tasks lists full benchmark suite (fallback if backend not restarted yet)
+    if (allTasks && allTasks.length > 0) {
+      data.all_tasks = allTasks;
+      if (data.all_models_data) {
+        data.all_models_data.tasks = allTasks;
+      }
+    }
 
     if (!data.results || data.results.length === 0) {
-      document.getElementById('content').innerHTML = `<p>No results found for model "${escHtml(name)}". <a href="/" class="back-link">Back to Dashboard</a></p>`;
+      document.getElementById('content').innerHTML = `<div class="empty-state">No results found for model "${escHtml(name)}".<br><br><a href="/" class="back-link" style="text-decoration:underline;">Back to Dashboard</a></div>`;
       return;
     }
 

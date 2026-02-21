@@ -29,6 +29,8 @@ for t in get_all_tasks_meta():
 In `dashboard.html` and `model.html`, intercept the initial fetch. Make a parallel request to `/api/tasks` and overwrite `data.tasks` with the complete list of tasks before rendering the UI components.
 
 ## Acceptance Criteria
-- [ ] Dashboard shows correct Pass Rate, Phase Rate, and Weighted Score based on the full benchmark size.
-- [ ] Tasks that haven't been evaluated yet for a specific model appear as "Not tested" or "—" in the Pass / Fail Matrix and Model Detail pages.
-- [ ] The fix applies to both the main summary page (`dashboard.html`) and the detailed model page (`model.html`).
+- [x] Dashboard shows correct Pass Rate, Phase Rate, and Weighted Score based on the full benchmark size.
+- [x] Tasks that haven't been evaluated yet for a specific model appear as "Not tested" or "—" in the Pass / Fail Matrix and Model Detail pages.
+- [x] The fix applies to both the main summary page (`dashboard.html`) and the detailed model page (`model.html`).
+
+**Status:** ✅ Completed (2026-02-21)

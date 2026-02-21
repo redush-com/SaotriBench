@@ -62,6 +62,14 @@ def scan_results() -> dict[str, Any]:
     models: set[str] = set()
     tasks: dict[str, dict[str, Any]] = {}  # task_id -> task meta
 
+    for t in get_all_tasks_meta():
+        tasks[t["task_id"]] = {
+            "task_id": t["task_id"],
+            "task_name": t["task_name"],
+            "difficulty": t["difficulty"],
+            "total_phases": t["total_phases"],
+        }
+
     results: list[dict[str, Any]] = []
     for run in latest.values():
         model = run.get("model_label", "unknown")

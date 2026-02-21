@@ -117,6 +117,12 @@ function totalTaskCount(data) {
 const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5 };
 
 function renderSummary(data) {
+  if (!data.models || data.models.length === 0) {
+    document.getElementById('summaryBadge').textContent = '0 models';
+    document.getElementById('summaryTable').innerHTML = '<div class="empty-state">No models have been tested yet. Run the benchmark to see results here.</div>';
+    return;
+  }
+
   const lookup = buildLookup(data);
   const totalTasks = totalTaskCount(data);
   const totalPhasesAll = data.tasks.reduce((s, t) => s + t.total_phases, 0);
@@ -210,6 +216,12 @@ function renderSummary(data) {
 // ── Render: Pass/Fail Matrix ─────────────────────────────
 
 function renderMatrix(data) {
+  if (!data.models || data.models.length === 0) {
+    document.getElementById('matrixBadge').textContent = `${data.tasks.length} tasks x 0 models`;
+    document.getElementById('matrixTable').innerHTML = '<div class="empty-state">No models have been tested yet. Run the benchmark to see results here.</div>';
+    return;
+  }
+
   const lookup = buildLookup(data);
 
   let html = `<table><thead><tr>
@@ -244,6 +256,12 @@ function renderMatrix(data) {
 // ── Render: By Difficulty ────────────────────────────────
 
 function renderDifficulty(data) {
+  if (!data.models || data.models.length === 0) {
+    document.getElementById('diffBadge').textContent = '0 models';
+    document.getElementById('difficultyTable').innerHTML = '<div class="empty-state">No models have been tested yet. Run the benchmark to see results here.</div>';
+    return;
+  }
+
   const lookup = buildLookup(data);
   const difficulties = ['easy', 'medium', 'hard'];
 
@@ -307,9 +325,22 @@ function renderDifficulty(data) {
 
 async function fetchAndRender() {
   try {
-    const resp = await fetch('/api/results');
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
+    const [resResp, tasksResp] = await Promise.all([
+      fetch('/api/results'),
+      fetch('/api/tasks')
+    ]);
+    
+    if (!resResp.ok) throw new Error(`HTTP ${resResp.status}`);
+    if (!tasksResp.ok) throw new Error(`HTTP ${tasksResp.status}`);
+    
+    const data = await resResp.json();
+    const allTasks = await tasksResp.json();
+    
+    // Ensure tasks lists full benchmark suite (fallback if backend not restarted yet)
+    if (allTasks && allTasks.length > 0) {
+      data.tasks = allTasks;
+    }
+    
     lastData = data;
 
     renderSummary(data);
