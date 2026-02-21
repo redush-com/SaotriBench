@@ -119,6 +119,11 @@ def main() -> int:
         help="List configured models and exit",
     )
     parser.add_argument(
+        "--rerun",
+        action="store_true",
+        help="Force re-run even if results exist (default: skip completed)",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Reduce output verbosity",
@@ -199,16 +204,34 @@ def main() -> int:
     print(f"Mode:     {mode}" + (f" (max {max_workers} workers)" if max_workers > 1 else ""))
     print(f"Reports:  {reports_dir}")
 
+    # Load completed pairs to skip (unless --rerun)
+    completed: set[tuple[str, str]] = set()
+    if not args.rerun:
+        completed = report_manager.get_completed_pairs()
+        if completed:
+            print(f"Found {len(completed)} completed result(s), will skip them.")
+
     # Run benchmarks
     all_results: list[RunResult] = []
     workspace_base = PROJECT_ROOT / "workspace"
 
     for task_dir in task_dirs:
+        # Filter models: skip already-completed pairs
+        models_to_run = [
+            m for m in models
+            if args.rerun or (m.id, task_dir.name) not in completed
+        ]
+        skipped = len(models) - len(models_to_run)
+        if skipped:
+            print(f"\n  Skipping {skipped} already completed model(s) for {task_dir.name}")
+        if not models_to_run:
+            continue
+
         task_results: list[RunResult] = []
 
         if max_workers <= 1:
             # Sequential mode
-            for model in models:
+            for model in models_to_run:
                 result = _run_single(model, task_dir, workspace_base, api_key, verbose)
                 if result:
                     report_path = report_manager.save_run_result(result)
@@ -217,13 +240,13 @@ def main() -> int:
                     task_results.append(result)
         else:
             # Parallel mode
-            print(f"\n  Running {len(models)} models in parallel (max {max_workers} workers)...")
+            print(f"\n  Running {len(models_to_run)} models in parallel (max {max_workers} workers)...")
             with ThreadPoolExecutor(max_workers=max_workers) as pool:
                 futures = {
                     pool.submit(
                         _run_single, m, task_dir, workspace_base, api_key, verbose
                     ): m
-                    for m in models
+                    for m in models_to_run
                 }
                 for future in as_completed(futures):
                     model = futures[future]
@@ -236,18 +259,19 @@ def main() -> int:
 
         all_results.extend(task_results)
 
-        # Save per-task comparison
-        if len(task_results) > 1:
-            comp_path = report_manager.save_comparison_report(
-                task_results, task_dir.name
-            )
-            if verbose:
-                print(f"\n  Comparison report: {comp_path}")
+    # Rebuild aggregated reports from ALL existing data (not just this run)
+    all_existing = report_manager.load_all_results()
+    if all_existing:
+        # Per-task comparison reports
+        by_task: dict[str, list[dict]] = {}
+        for r in all_existing:
+            by_task.setdefault(r["task_id"], []).append(r)
+        for task_id, results in by_task.items():
+            report_manager.save_comparison_report(results, task_id)
 
-    # Save full report
-    if all_results:
-        full_path = report_manager.save_full_report(all_results)
-        report_manager.print_summary(all_results)
+        # Full benchmark report
+        full_path = report_manager.save_full_report(all_existing)
+        report_manager.print_summary(all_existing)
         print(f"\nFull report: {full_path}")
 
     return 0

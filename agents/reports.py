@@ -10,12 +10,48 @@ from typing import Any
 from .bench_runner import RunResult
 
 
+def _is_better(new: dict, old: dict) -> bool:
+    """Return True if *new* result is better than *old* for the same pair."""
+    if new["phases_completed"] != old["phases_completed"]:
+        return new["phases_completed"] > old["phases_completed"]
+    return new["timestamp"] > old["timestamp"]
+
+
+def _get(r, field):
+    """Get field from RunResult or dict."""
+    if isinstance(r, dict):
+        return r[field]
+    return getattr(r, field)
+
+
 class ReportManager:
     """Manages saving and loading benchmark reports."""
 
     def __init__(self, reports_dir: Path):
         self.reports_dir = Path(reports_dir)
         self.reports_dir.mkdir(parents=True, exist_ok=True)
+
+    def load_all_results(self) -> list[dict]:
+        """Load best result for each (model_id, task_id) from existing reports."""
+        all_runs: dict[tuple[str, str], dict] = {}
+
+        for path in sorted(self.reports_dir.glob("*/*/run_*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            key = (data["model_id"], data["task_id"])
+
+            existing = all_runs.get(key)
+            if existing is None or _is_better(data, existing):
+                all_runs[key] = data
+
+        return list(all_runs.values())
+
+    def get_completed_pairs(self) -> set[tuple[str, str]]:
+        """Return (model_id, task_id) pairs that have completed status."""
+        return {
+            (d["model_id"], d["task_id"])
+            for d in self.load_all_results()
+            if d["final_status"] == "completed"
+        }
 
     def save_run_result(self, result: RunResult) -> Path:
         """Save a single run result to a JSON file.
@@ -39,9 +75,11 @@ class ReportManager:
         return filepath
 
     def save_comparison_report(
-        self, results: list[RunResult], task_id: str
+        self, results: list, task_id: str
     ) -> Path:
         """Save a comparison report across models for one task.
+
+        Accepts both RunResult objects and dicts loaded from JSON.
 
         Returns:
             Path to the comparison report
@@ -57,20 +95,22 @@ class ReportManager:
         }
 
         for r in results:
+            total_phases = _get(r, "total_phases")
+            phases_completed = _get(r, "phases_completed")
             comparison["results"].append({
-                "model": r.model_label,
-                "tier": r.model_tier,
-                "model_id": r.model_id,
-                "phases_completed": r.phases_completed,
-                "total_phases": r.total_phases,
+                "model": _get(r, "model_label"),
+                "tier": _get(r, "model_tier"),
+                "model_id": _get(r, "model_id"),
+                "phases_completed": phases_completed,
+                "total_phases": total_phases,
                 "completion_rate": (
-                    r.phases_completed / r.total_phases if r.total_phases > 0 else 0
+                    phases_completed / total_phases if total_phases > 0 else 0
                 ),
-                "total_attempts": r.total_attempts,
-                "final_status": r.final_status,
-                "token_usage": r.token_usage,
-                "duration_seconds": r.total_duration_seconds,
-                "phase_details": r.phase_results,
+                "total_attempts": _get(r, "total_attempts"),
+                "final_status": _get(r, "final_status"),
+                "token_usage": _get(r, "token_usage"),
+                "duration_seconds": _get(r, "total_duration_seconds"),
+                "phase_details": _get(r, "phase_results"),
             })
 
         # Sort by completion rate descending
@@ -85,16 +125,18 @@ class ReportManager:
         )
         return filepath
 
-    def save_full_report(self, all_results: list[RunResult]) -> Path:
+    def save_full_report(self, all_results: list) -> Path:
         """Save a full benchmark report across all tasks and models.
+
+        Accepts both RunResult objects and dicts loaded from JSON.
 
         Returns:
             Path to the full report
         """
         # Group by task
-        by_task: dict[str, list[RunResult]] = {}
+        by_task: dict[str, list] = {}
         for r in all_results:
-            by_task.setdefault(r.task_id, []).append(r)
+            by_task.setdefault(_get(r, "task_id"), []).append(r)
 
         report = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -105,45 +147,52 @@ class ReportManager:
 
         # Per-task breakdown
         for task_id, results in by_task.items():
+            first = results[0]
             task_data = {
-                "task_name": results[0].task_name,
-                "difficulty": results[0].difficulty,
-                "total_phases": results[0].total_phases,
+                "task_name": _get(first, "task_name"),
+                "difficulty": _get(first, "difficulty"),
+                "total_phases": _get(first, "total_phases"),
                 "models": {},
             }
             for r in results:
-                task_data["models"][r.model_label] = {
-                    "tier": r.model_tier,
-                    "phases_completed": r.phases_completed,
-                    "total_attempts": r.total_attempts,
-                    "final_status": r.final_status,
+                total_phases = _get(r, "total_phases")
+                phases_completed = _get(r, "phases_completed")
+                task_data["models"][_get(r, "model_label")] = {
+                    "tier": _get(r, "model_tier"),
+                    "phases_completed": phases_completed,
+                    "total_attempts": _get(r, "total_attempts"),
+                    "final_status": _get(r, "final_status"),
                     "completion_rate": (
-                        r.phases_completed / r.total_phases
-                        if r.total_phases > 0
+                        phases_completed / total_phases
+                        if total_phases > 0
                         else 0
                     ),
-                    "tokens": r.token_usage["total_tokens"],
-                    "duration": r.total_duration_seconds,
+                    "tokens": _get(r, "token_usage")["total_tokens"],
+                    "duration": _get(r, "total_duration_seconds"),
                 }
             report["tasks"][task_id] = task_data
 
         # Per-model summary
-        by_model: dict[str, list[RunResult]] = {}
+        by_model: dict[str, list] = {}
         for r in all_results:
-            by_model.setdefault(r.model_label, []).append(r)
+            by_model.setdefault(_get(r, "model_label"), []).append(r)
 
         for model_label, results in by_model.items():
-            total_phases = sum(r.total_phases for r in results)
-            completed_phases = sum(r.phases_completed for r in results)
-            total_tokens = sum(r.token_usage["total_tokens"] for r in results)
-            total_duration = sum(r.total_duration_seconds for r in results)
+            total_phases = sum(_get(r, "total_phases") for r in results)
+            completed_phases = sum(_get(r, "phases_completed") for r in results)
+            total_tokens = sum(
+                _get(r, "token_usage")["total_tokens"] for r in results
+            )
+            total_duration = sum(
+                _get(r, "total_duration_seconds") for r in results
+            )
             tasks_completed = sum(
-                1 for r in results if r.final_status == "completed"
+                1 for r in results if _get(r, "final_status") == "completed"
             )
 
             report["model_summary"][model_label] = {
-                "tier": results[0].model_tier,
-                "model_id": results[0].model_id,
+                "tier": _get(results[0], "model_tier"),
+                "model_id": _get(results[0], "model_id"),
                 "tasks_run": len(results),
                 "tasks_completed": tasks_completed,
                 "task_completion_rate": (
@@ -167,21 +216,25 @@ class ReportManager:
         )
         return filepath
 
-    def print_summary(self, all_results: list[RunResult]) -> None:
-        """Print a human-readable summary to stdout."""
+    def print_summary(self, all_results: list) -> None:
+        """Print a human-readable summary to stdout.
+
+        Accepts both RunResult objects and dicts loaded from JSON.
+        """
         print("\n" + "=" * 70)
         print("  BENCHMARK RESULTS SUMMARY")
         print("=" * 70)
 
         # Group by task
-        by_task: dict[str, list[RunResult]] = {}
+        by_task: dict[str, list] = {}
         for r in all_results:
-            by_task.setdefault(r.task_id, []).append(r)
+            by_task.setdefault(_get(r, "task_id"), []).append(r)
 
         for task_id, results in by_task.items():
-            task_name = results[0].task_name
-            difficulty = results[0].difficulty
-            total_phases = results[0].total_phases
+            first = results[0]
+            task_name = _get(first, "task_name")
+            difficulty = _get(first, "difficulty")
+            total_phases = _get(first, "total_phases")
 
             print(f"\n  Task: {task_name} [{difficulty}] ({total_phases} phases)")
             print(f"  {'Model':<20} {'Tier':<8} {'Phases':<12} {'Attempts':<10} {'Status':<10} {'Tokens':<10} {'Time':<8}")
@@ -189,18 +242,20 @@ class ReportManager:
 
             # Sort by tier strength
             tier_order = {"strong": 0, "medium": 1, "weak": 2}
-            results.sort(key=lambda r: tier_order.get(r.model_tier, 99))
+            results.sort(key=lambda r: tier_order.get(_get(r, "model_tier"), 99))
 
             for r in results:
-                phases_str = f"{r.phases_completed}/{r.total_phases}"
-                tokens_str = str(r.token_usage["total_tokens"])
-                time_str = f"{r.total_duration_seconds:.1f}s"
+                phases_completed = _get(r, "phases_completed")
+                r_total = _get(r, "total_phases")
+                phases_str = f"{phases_completed}/{r_total}"
+                tokens_str = str(_get(r, "token_usage")["total_tokens"])
+                time_str = f"{_get(r, 'total_duration_seconds'):.1f}s"
                 status_map = {"completed": "PASS", "timeout": "TIME"}
-                status_icon = status_map.get(r.final_status, "FAIL")
+                status_icon = status_map.get(_get(r, "final_status"), "FAIL")
 
                 print(
-                    f"  {r.model_label:<20} {r.model_tier:<8} {phases_str:<12} "
-                    f"{r.total_attempts:<10} {status_icon:<10} {tokens_str:<10} {time_str:<8}"
+                    f"  {_get(r, 'model_label'):<20} {_get(r, 'model_tier'):<8} {phases_str:<12} "
+                    f"{_get(r, 'total_attempts'):<10} {status_icon:<10} {tokens_str:<10} {time_str:<8}"
                 )
 
         print("\n" + "=" * 70)
