@@ -26,6 +26,8 @@ env/
 # Workspace (runtime artifacts)
 workspace/
 
+reports/
+
 # Environment variables
 .env
 
