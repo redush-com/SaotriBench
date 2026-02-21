@@ -340,14 +340,20 @@ cp agents/.env.example agents/.env
 ### Run benchmark
 
 ```bash
-# Run all 3 models on all tasks
+# Run all models on all tasks (sequential)
 python -m agents.run_benchmark
 
 # Run a specific model tier on a specific task
 python -m agents.run_benchmark --tier strong --task task_00_fizzbuzz
 
-# Run all models on one task
-python -m agents.run_benchmark --task task_00_fizzbuzz
+# Run selected models
+python -m agents.run_benchmark --models claude-opus,gpt,deepseek
+
+# Run models in parallel (up to 4 at a time)
+python -m agents.run_benchmark --models claude-opus,gpt,deepseek --parallel 4
+
+# Run all models in parallel
+python -m agents.run_benchmark --parallel 5
 
 # List configured models
 python -m agents.run_benchmark --list-models
