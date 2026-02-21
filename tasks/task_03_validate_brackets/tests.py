@@ -64,4 +64,11 @@ TEST_CASES = [
         phase=4,
         tags=["large_input"],
     ),
+
+    # Phase 5 — regression testing with complex edge cases
+    TestCase(input="([{}]){()}", expected=True, phase=5, tags=["interleaved_brackets"]),
+    TestCase(input="((", expected=False, phase=5, tags=["missing_closure"]),
+    TestCase(input="))", expected=False, phase=5, tags=["early_closure"]),
+    TestCase(input="{[}]", expected=False, phase=5, tags=["early_closure"]),
+    TestCase(input="[{}](", expected=False, phase=5, tags=["missing_closure"]),
 ]

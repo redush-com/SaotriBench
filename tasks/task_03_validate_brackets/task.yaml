@@ -56,6 +56,19 @@ phases:
         description: "Handles large inputs within time limit"
         scopes: ["large_input"]
 
+  - id: 5
+    description: "Regression testing: complex edge cases"
+    rules:
+      - id: "correct_output"
+        description: "Returns True for valid strings"
+        scopes: ["round_only", "mixed_brackets", "whitespace", "empty_input", "interleaved_brackets"]
+      - id: "correct_error"
+        description: "Raises ValueError with position for invalid strings"
+        scopes: ["error_position", "early_closure", "missing_closure"]
+      - id: "performance"
+        description: "Handles large inputs within time limit"
+        scopes: ["large_input"]
+
 limits:
   max_attempts_per_phase: 5
-  max_total_attempts: 25
+  max_total_attempts: 30

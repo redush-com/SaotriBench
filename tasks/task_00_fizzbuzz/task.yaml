@@ -42,6 +42,19 @@ phases:
         description: "Same input always produces same output"
         scopes: ["consistency"]
 
+  - id: 3
+    description: "Regression testing: edge cases and robustness"
+    rules:
+      - id: "correct_output"
+        description: "Output matches expected string"
+        scopes: ["divisible_by_3", "divisible_by_5", "divisible_by_15", "plain_number", "divisible_by_7", "divisible_by_21", "divisible_by_35", "divisible_by_105", "negative_numbers", "zero_case"]
+      - id: "correct_type"
+        description: "Return value must be a string"
+        scopes: ["type_check"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["consistency"]
+
 limits:
   max_attempts_per_phase: 5
-  max_total_attempts: 15
+  max_total_attempts: 20
