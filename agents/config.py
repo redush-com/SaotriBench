@@ -46,6 +46,7 @@ MODELS: dict[str, ModelConfig] = {
         label="Claude Opus 4.6",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
         response_timeout=150.0,  # Reasoning model, allow a bit more time
     ),
     "gemini-pro": ModelConfig(
@@ -60,24 +61,28 @@ MODELS: dict[str, ModelConfig] = {
         label="Kimi K2.5",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
     "gpt": ModelConfig(
         id="openai/gpt-5.2-codex",
         label="GPT-5.2 Codex",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
     "minimax": ModelConfig(
         id="minimax/minimax-m2.5",
         label="MiniMax M2.5",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
     "glm": ModelConfig(
         id="z-ai/glm-5",
         label="GLM 5",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
 }
 
