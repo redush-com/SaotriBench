@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -37,7 +38,8 @@ class OpenRouterClient:
 
     BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-    MAX_EMPTY_RETRIES = 2
+    MAX_EMPTY_RETRIES = 3
+    RETRY_BACKOFF_BASE = 2.0  # seconds; delays: 2, 4, 8
 
     def __init__(self, api_key: str | None = None, timeout: float = 120.0):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
@@ -69,8 +71,10 @@ class OpenRouterClient:
 
         for attempt in range(1 + self.MAX_EMPTY_RETRIES):
             if attempt > 0:
+                delay = self.RETRY_BACKOFF_BASE ** attempt
                 print(f"  [retry {attempt}/{self.MAX_EMPTY_RETRIES}] "
-                      f"empty response from {model.id}, retrying...")
+                      f"empty response from {model.id}, retrying in {delay:.0f}s...")
+                time.sleep(delay)
 
             try:
                 return self._request(model, messages)
