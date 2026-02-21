@@ -42,8 +42,16 @@ class OpenRouterClient:
 
     BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-    MAX_EMPTY_RETRIES = 3
+    MAX_RETRIES = 3
     RETRY_BACKOFF_BASE = 2.0  # seconds; delays: 2, 4, 8
+
+    # Transient network errors that should be retried
+    RETRYABLE_ERRORS = (
+        EmptyResponseError,
+        httpx.ConnectError,
+        httpx.RemoteProtocolError,
+        httpx.ReadError,
+    )
 
     def __init__(self, api_key: str | None = None, timeout: float = 120.0):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
@@ -59,7 +67,10 @@ class OpenRouterClient:
         model: ModelConfig,
         messages: list[dict[str, str]],
     ) -> LLMResponse:
-        """Send a chat completion request with retry on empty responses.
+        """Send a chat completion request with retry on transient errors.
+
+        Retries on empty responses and network errors (connection drops,
+        server disconnects, read failures) with exponential backoff.
 
         Args:
             model: Model configuration
@@ -70,19 +81,22 @@ class OpenRouterClient:
 
         Raises:
             EmptyResponseError: If model returns empty content after all retries
+            httpx.ConnectError: If connection fails after all retries
+            httpx.RemoteProtocolError: If server disconnects after all retries
         """
-        last_error: EmptyResponseError | None = None
+        last_error: Exception | None = None
 
-        for attempt in range(1 + self.MAX_EMPTY_RETRIES):
+        for attempt in range(1 + self.MAX_RETRIES):
             if attempt > 0:
                 delay = self.RETRY_BACKOFF_BASE ** attempt
-                print(f"  [retry {attempt}/{self.MAX_EMPTY_RETRIES}] "
-                      f"empty response from {model.id}, retrying in {delay:.0f}s...")
+                error_type = type(last_error).__name__
+                print(f"  [retry {attempt}/{self.MAX_RETRIES}] "
+                      f"{error_type} from {model.id}, retrying in {delay:.0f}s...")
                 time.sleep(delay)
 
             try:
                 return self._request(model, messages)
-            except EmptyResponseError as e:
+            except self.RETRYABLE_ERRORS as e:
                 last_error = e
                 continue
 
