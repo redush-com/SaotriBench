@@ -9,7 +9,6 @@ Infrastructure and technical errors observed during strong-tier model benchmarki
 | Empty Response (token limit) | 9 | GPT-5.2 Codex, Kimi K2.5, GLM 5, MiniMax M2.5 |
 | Import Violations | 4 | Claude Opus 4.6, MiniMax M2.5 |
 | Syntax Errors | 5 | GPT-5.2 Codex, Kimi K2.5, GLM 5 |
-| Extreme Latency | 1 | Grok 4 |
 
 ## 1. Empty Response Errors (finish_reason=length)
 

@@ -1,0 +1,39 @@
+{
+  "model_id": "z-ai/glm-5",
+  "model_label": "GLM 5",
+  "model_tier": "strong",
+  "task_id": "task_00_fizzbuzz",
+  "task_name": "FizzBuzz Extended",
+  "difficulty": "easy",
+  "total_phases": 3,
+  "phases_completed": 3,
+  "total_attempts": 2,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 1282,
+    "completion_tokens": 1194,
+    "total_tokens": 2476
+  },
+  "total_duration_seconds": 37.428194522857666,
+  "timestamp": "2026-02-15T17:25:26.465207+00:00"
+}

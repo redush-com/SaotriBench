@@ -62,6 +62,14 @@ def scan_results() -> dict[str, Any]:
     models: set[str] = set()
     tasks: dict[str, dict[str, Any]] = {}  # task_id -> task meta
 
+    for t in get_all_tasks_meta():
+        tasks[t["task_id"]] = {
+            "task_id": t["task_id"],
+            "task_name": t["task_name"],
+            "difficulty": t["difficulty"],
+            "total_phases": t["total_phases"],
+        }
+
     results: list[dict[str, Any]] = []
     for run in latest.values():
         model = run.get("model_label", "unknown")
@@ -80,8 +88,12 @@ def scan_results() -> dict[str, Any]:
         clean = {k: v for k, v in run.items() if not k.startswith("_")}
         results.append(clean)
 
-    # Sort tasks by task_id, models alphabetically
-    sorted_tasks = sorted(tasks.values(), key=lambda t: t["task_id"])
+    # Sort tasks by difficulty then task_id, models alphabetically
+    difficulty_order = {"easy": 0, "medium": 1, "hard": 2, "expert": 3}
+    sorted_tasks = sorted(tasks.values(), key=lambda t: (
+        difficulty_order.get(str(t.get("difficulty", "easy")).lower(), 99),
+        t["task_id"]
+    ))
     sorted_models = sorted(models)
 
     return {
@@ -134,6 +146,13 @@ def get_all_tasks_meta() -> list[dict[str, Any]]:
             "interface": data.get("interface", {}),
             "limits": data.get("limits", {}),
         })
+
+    difficulty_order = {"easy": 0, "medium": 1, "hard": 2, "expert": 3}
+    tasks.sort(key=lambda t: (
+        difficulty_order.get(str(t.get("difficulty", "easy")).lower(), 99),
+        t["task_id"]
+    ))
+
     return tasks
 
 

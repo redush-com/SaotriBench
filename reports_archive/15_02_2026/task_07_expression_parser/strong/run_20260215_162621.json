@@ -1,0 +1,75 @@
+{
+  "model_id": "anthropic/claude-opus-4.6",
+  "model_label": "Claude Opus 4.6",
+  "model_tier": "strong",
+  "task_id": "task_07_expression_parser",
+  "task_name": "Expression Parser",
+  "difficulty": "medium",
+  "total_phases": 9,
+  "phases_completed": 9,
+  "total_attempts": 7,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 5,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 6,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 7,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 8,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 10491,
+    "completion_tokens": 4703,
+    "total_tokens": 15194
+  },
+  "total_duration_seconds": 49.23764634132385,
+  "timestamp": "2026-02-15T13:26:21.278695+00:00"
+}

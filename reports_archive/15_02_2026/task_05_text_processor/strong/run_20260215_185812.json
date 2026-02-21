@@ -1,0 +1,39 @@
+{
+  "model_id": "moonshotai/kimi-k2.5",
+  "model_label": "Kimi K2.5",
+  "model_tier": "strong",
+  "task_id": "task_05_text_processor",
+  "task_name": "Text Processor",
+  "difficulty": "medium",
+  "total_phases": 7,
+  "phases_completed": 2,
+  "total_attempts": 7,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.75
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 14441,
+    "completion_tokens": 11484,
+    "total_tokens": 25925
+  },
+  "total_duration_seconds": 1418.1739246845245,
+  "timestamp": "2026-02-15T15:58:12.222342+00:00"
+}

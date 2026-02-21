@@ -1,0 +1,51 @@
+{
+  "model_id": "anthropic/claude-opus-4.6",
+  "model_label": "Claude Opus 4.6",
+  "model_tier": "strong",
+  "task_id": "task_05_text_processor",
+  "task_name": "Text Processor",
+  "difficulty": "medium",
+  "total_phases": 7,
+  "phases_completed": 4,
+  "total_attempts": 10,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.8571428571428571
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 87333,
+    "completion_tokens": 11894,
+    "total_tokens": 99227
+  },
+  "total_duration_seconds": 155.69318652153015,
+  "timestamp": "2026-02-15T13:43:21.462369+00:00"
+}

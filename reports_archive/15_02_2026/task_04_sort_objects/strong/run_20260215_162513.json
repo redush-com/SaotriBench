@@ -1,0 +1,57 @@
+{
+  "model_id": "anthropic/claude-opus-4.6",
+  "model_label": "Claude Opus 4.6",
+  "model_tier": "strong",
+  "task_id": "task_04_sort_objects",
+  "task_name": "Sort Objects",
+  "difficulty": "medium",
+  "total_phases": 6,
+  "phases_completed": 6,
+  "total_attempts": 7,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 5,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 11035,
+    "completion_tokens": 2333,
+    "total_tokens": 13368
+  },
+  "total_duration_seconds": 42.54455089569092,
+  "timestamp": "2026-02-15T13:25:13.328166+00:00"
+}

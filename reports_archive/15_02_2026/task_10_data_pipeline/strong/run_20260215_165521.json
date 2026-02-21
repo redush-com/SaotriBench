@@ -1,0 +1,45 @@
+{
+  "model_id": "anthropic/claude-opus-4.6",
+  "model_label": "Claude Opus 4.6",
+  "model_tier": "strong",
+  "task_id": "task_10_data_pipeline",
+  "task_name": "Data Pipeline",
+  "difficulty": "hard",
+  "total_phases": 12,
+  "phases_completed": 3,
+  "total_attempts": 11,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 8,
+      "coverage": 0.6
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 134925,
+    "completion_tokens": 15073,
+    "total_tokens": 149998
+  },
+  "total_duration_seconds": 176.98164653778076,
+  "timestamp": "2026-02-15T13:55:21.803462+00:00"
+}

@@ -1,0 +1,45 @@
+{
+  "model_id": "minimax/minimax-m2.5",
+  "model_label": "MiniMax M2.5",
+  "model_tier": "strong",
+  "task_id": "task_04_sort_objects",
+  "task_name": "Sort Objects",
+  "difficulty": "medium",
+  "total_phases": 6,
+  "phases_completed": 3,
+  "total_attempts": 9,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 3,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.9
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 16158,
+    "completion_tokens": 4903,
+    "total_tokens": 21061
+  },
+  "total_duration_seconds": 477.51863527297974,
+  "timestamp": "2026-02-15T17:27:20.374355+00:00"
+}

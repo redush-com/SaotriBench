@@ -184,6 +184,16 @@ tr:nth-child(even) td { background: var(--bg-row-alt); }
   margin-top: 6px;
 }
 
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-style: italic;
+}
+
 .loading {
   color: var(--text-dim);
   padding: 40px;

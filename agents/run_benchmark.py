@@ -10,6 +10,12 @@ Usage:
     # Run all models on one task
     python -m agents.run_benchmark --task task_00_fizzbuzz
 
+    # Run selected models
+    python -m agents.run_benchmark --models claude-opus,gpt,deepseek
+
+    # Run models in parallel (up to 4 at a time)
+    python -m agents.run_benchmark --models claude-opus,gpt,deepseek --parallel 4
+
     # List available models
     python -m agents.run_benchmark --list-models
 """
@@ -18,6 +24,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 # Ensure project root is on path
@@ -42,6 +50,32 @@ def find_tasks(tasks_dir: Path) -> list[Path]:
     return tasks
 
 
+def _run_single(
+    model,
+    task_dir: Path,
+    workspace_base: Path,
+    api_key: str,
+    verbose: bool,
+) -> RunResult | None:
+    """Run a single model on a single task with an isolated workspace."""
+    model_slug = model.id.replace("/", "_").replace(":", "_")
+    workspace_dir = workspace_base / f"{task_dir.name}_{model_slug}"
+
+    try:
+        result = run_agent_on_task(
+            model_config=model,
+            task_dir=task_dir,
+            workspace_dir=workspace_dir,
+            api_key=api_key,
+            verbose=verbose,
+        )
+        return result
+    except Exception as e:
+        print(f"\n  ERROR running {model.label} on {task_dir.name}: {e}")
+        traceback.print_exc()
+        return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run LLM agents against Saotri Bench tasks"
@@ -50,6 +84,10 @@ def main() -> int:
         "--tier",
         choices=list(MODELS.keys()),
         help="Run only this model tier (default: all)",
+    )
+    parser.add_argument(
+        "--models",
+        help="Comma-separated list of model tier keys to run (e.g. claude-opus,gpt,deepseek)",
     )
     parser.add_argument(
         "--task",
@@ -70,9 +108,20 @@ def main() -> int:
         help="OpenRouter API key (or set OPENROUTER_API_KEY env var)",
     )
     parser.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        help="Max parallel model runs per task (default: 1 = sequential)",
+    )
+    parser.add_argument(
         "--list-models",
         action="store_true",
         help="List configured models and exit",
+    )
+    parser.add_argument(
+        "--rerun",
+        action="store_true",
+        help="Force re-run even if results exist (default: skip completed)",
     )
     parser.add_argument(
         "--quiet",
@@ -91,6 +140,10 @@ def main() -> int:
             print(f"         Temperature: {m.temperature}")
             print()
         return 0
+
+    # Validate mutually exclusive options
+    if args.tier and args.models:
+        parser.error("--tier and --models are mutually exclusive")
 
     # Resolve API key
     api_key = args.api_key
@@ -123,6 +176,17 @@ def main() -> int:
     # Resolve models
     if args.tier:
         models = [get_model(args.tier)]
+    elif args.models:
+        model_keys = [k.strip() for k in args.models.split(",")]
+        for k in model_keys:
+            if k not in MODELS:
+                print(
+                    f"Error: Unknown model key: {k}. "
+                    f"Choose from: {', '.join(MODELS.keys())}",
+                    file=sys.stderr,
+                )
+                return 1
+        models = [get_model(k) for k in model_keys]
     else:
         models = list_models()
 
@@ -131,55 +195,83 @@ def main() -> int:
     report_manager = ReportManager(reports_dir)
 
     verbose = not args.quiet
+    max_workers = max(1, args.parallel)
 
+    mode = "parallel" if max_workers > 1 else "sequential"
     print(f"\nSaotri Bench — LLM Agent Benchmark")
-    print(f"Models: {', '.join(m.label for m in models)}")
-    print(f"Tasks:  {', '.join(t.name for t in task_dirs)}")
-    print(f"Reports: {reports_dir}")
+    print(f"Models:   {', '.join(m.label for m in models)}")
+    print(f"Tasks:    {', '.join(t.name for t in task_dirs)}")
+    print(f"Mode:     {mode}" + (f" (max {max_workers} workers)" if max_workers > 1 else ""))
+    print(f"Reports:  {reports_dir}")
+
+    # Load completed pairs to skip (unless --rerun)
+    completed: set[tuple[str, str]] = set()
+    if not args.rerun:
+        completed = report_manager.get_completed_pairs()
+        if completed:
+            print(f"Found {len(completed)} completed result(s), will skip them.")
 
     # Run benchmarks
     all_results: list[RunResult] = []
+    workspace_base = PROJECT_ROOT / "workspace"
 
     for task_dir in task_dirs:
+        # Filter models: skip already-completed pairs
+        models_to_run = [
+            m for m in models
+            if args.rerun or (m.id, task_dir.name) not in completed
+        ]
+        skipped = len(models) - len(models_to_run)
+        if skipped:
+            print(f"\n  Skipping {skipped} already completed model(s) for {task_dir.name}")
+        if not models_to_run:
+            continue
+
         task_results: list[RunResult] = []
 
-        for model in models:
-            workspace_dir = PROJECT_ROOT / "workspace"
+        if max_workers <= 1:
+            # Sequential mode
+            for model in models_to_run:
+                result = _run_single(model, task_dir, workspace_base, api_key, verbose)
+                if result:
+                    report_path = report_manager.save_run_result(result)
+                    if verbose:
+                        print(f"  Report saved: {report_path}")
+                    task_results.append(result)
+        else:
+            # Parallel mode
+            print(f"\n  Running {len(models_to_run)} models in parallel (max {max_workers} workers)...")
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                futures = {
+                    pool.submit(
+                        _run_single, m, task_dir, workspace_base, api_key, verbose
+                    ): m
+                    for m in models_to_run
+                }
+                for future in as_completed(futures):
+                    model = futures[future]
+                    result = future.result()
+                    if result:
+                        report_path = report_manager.save_run_result(result)
+                        if verbose:
+                            print(f"  Report saved ({model.label}): {report_path}")
+                        task_results.append(result)
 
-            try:
-                result = run_agent_on_task(
-                    model_config=model,
-                    task_dir=task_dir,
-                    workspace_dir=workspace_dir,
-                    api_key=api_key,
-                    verbose=verbose,
-                )
+        all_results.extend(task_results)
 
-                # Save individual result
-                report_path = report_manager.save_run_result(result)
-                if verbose:
-                    print(f"  Report saved: {report_path}")
+    # Rebuild aggregated reports from ALL existing data (not just this run)
+    all_existing = report_manager.load_all_results()
+    if all_existing:
+        # Per-task comparison reports
+        by_task: dict[str, list[dict]] = {}
+        for r in all_existing:
+            by_task.setdefault(r["task_id"], []).append(r)
+        for task_id, results in by_task.items():
+            report_manager.save_comparison_report(results, task_id)
 
-                task_results.append(result)
-                all_results.append(result)
-
-            except Exception as e:
-                print(f"\n  ERROR running {model.label} on {task_dir.name}: {e}")
-                import traceback
-                traceback.print_exc()
-
-        # Save per-task comparison
-        if len(task_results) > 1:
-            comp_path = report_manager.save_comparison_report(
-                task_results, task_dir.name
-            )
-            if verbose:
-                print(f"\n  Comparison report: {comp_path}")
-
-    # Save full report
-    if all_results:
-        full_path = report_manager.save_full_report(all_results)
-        report_manager.print_summary(all_results)
+        # Full benchmark report
+        full_path = report_manager.save_full_report(all_existing)
+        report_manager.print_summary(all_existing)
         print(f"\nFull report: {full_path}")
 
     return 0

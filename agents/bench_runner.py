@@ -124,6 +124,7 @@ def run_agent_on_task(
     phases_completed = 0
     final_status = "failed"
     current_phase_log: list[str] = []
+    current_phase_errors: list[dict[str, Any]] = []
 
     try:
         # Generate initial solution
@@ -173,6 +174,12 @@ def run_agent_on_task(
                 log_entry += f" — violations: {', '.join(parts)}"
             if feedback.error:
                 log_entry += f" — ERROR: {feedback.error.message[:200]}"
+                current_phase_errors.append({
+                    "type": feedback.error.type,
+                    "message": feedback.error.message,
+                    "attempt": runner.total_attempts,
+                    "phase": runner.current_phase.id,
+                })
             current_phase_log.append(log_entry)
 
             # Phase complete?
@@ -186,8 +193,10 @@ def run_agent_on_task(
                     "attempts": runner.phase_attempts,
                     "coverage": feedback.summary.coverage,
                     "error_log": current_phase_log,
+                    "errors": current_phase_errors,
                 })
                 current_phase_log = []
+                current_phase_errors = []
 
                 if verbose:
                     print(f"  Phase {runner.current_phase.id} COMPLETED!")
@@ -218,6 +227,7 @@ def run_agent_on_task(
                             "attempts": 0,
                             "coverage": implicit_fb.summary.coverage,
                             "error_log": [],
+                            "errors": [],
                         })
                         if verbose:
                             print(f"  Phase {runner.current_phase.id} COMPLETED (implicit)!")
@@ -233,7 +243,7 @@ def run_agent_on_task(
                     # Need to refine for new phase
                     feedback_data = json.loads(
                         runner.feedback_file.read_text(encoding="utf-8")
-                    ) if runner.feedback_file.exists() else implicit_fb.to_dict()
+                    ) if runner.feedback_file.exists() else runner._obfuscate_feedback_dict(implicit_fb.to_dict())
 
                     # Read phase.json for phase transition context
                     phase_data = json.loads(
@@ -253,8 +263,10 @@ def run_agent_on_task(
                         print("\n  ALL PHASES COMPLETED!")
                     break
 
-            # Not valid yet — refine
-            feedback_data = feedback.to_dict()
+            # Not valid yet — refine (read from file to get obfuscated scopes)
+            feedback_data = json.loads(
+                runner.feedback_file.read_text(encoding="utf-8")
+            )
             code = agent.refine_solution(feedback_data)
             agent.write_solution(code)
 
@@ -265,10 +277,26 @@ def run_agent_on_task(
         if verbose:
             print(f"\n  TIMEOUT: {e}")
         final_status = "timeout"
+        current_phase_errors.append({
+            "type": "ResponseTimeoutError",
+            "message": str(e),
+            "attempt": runner.total_attempts,
+            "phase": runner.current_phase.id,
+        })
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         if verbose:
             print(f"\n  AGENT ERROR: {e}")
+            print(error_trace)
         final_status = "error"
+        current_phase_errors.append({
+            "type": type(e).__name__,
+            "message": str(e),
+            "traceback": error_trace,
+            "attempt": runner.total_attempts,
+            "phase": runner.current_phase.id,
+        })
 
     total_duration = time.time() - start_time
 
@@ -288,6 +316,7 @@ def run_agent_on_task(
                     else 0.0
                 ),
                 "error_log": current_phase_log,
+                "errors": current_phase_errors,
             })
 
     result = RunResult(

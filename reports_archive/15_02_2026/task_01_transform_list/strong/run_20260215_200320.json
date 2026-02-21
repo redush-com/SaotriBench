@@ -1,0 +1,39 @@
+{
+  "model_id": "openai/gpt-5.2-codex",
+  "model_label": "GPT-5.2 Codex",
+  "model_tier": "strong",
+  "task_id": "task_01_transform_list",
+  "task_name": "Transform List",
+  "difficulty": "easy",
+  "total_phases": 3,
+  "phases_completed": 3,
+  "total_attempts": 4,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 3258,
+    "completion_tokens": 2615,
+    "total_tokens": 5873
+  },
+  "total_duration_seconds": 47.79417300224304,
+  "timestamp": "2026-02-15T17:03:20.134745+00:00"
+}

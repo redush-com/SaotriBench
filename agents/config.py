@@ -12,7 +12,7 @@ class ModelConfig:
     id: str  # OpenRouter model ID
     label: str  # Human-readable short name
     tier: str  # "weak", "medium", "strong"
-    max_tokens: int = 4096
+    max_tokens: int = 8192
     temperature: float = 0.2
     response_timeout: float = 120.0  # Max seconds to wait for a single LLM response
 
@@ -46,6 +46,7 @@ MODELS: dict[str, ModelConfig] = {
         label="Claude Opus 4.6",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
         response_timeout=150.0,  # Reasoning model, allow a bit more time
     ),
     "gemini-pro": ModelConfig(
@@ -55,36 +56,68 @@ MODELS: dict[str, ModelConfig] = {
         temperature=0.1,
         max_tokens=8192,
     ),
-    "grok": ModelConfig(
-        id="x-ai/grok-4",
-        label="Grok 4",
-        tier="strong",
-        temperature=0.1,
-        response_timeout=180.0,  # Grok 4 is slow; cap at 3 minutes
-    ),
     "kimi": ModelConfig(
         id="moonshotai/kimi-k2.5",
         label="Kimi K2.5",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
     "gpt": ModelConfig(
         id="openai/gpt-5.2-codex",
         label="GPT-5.2 Codex",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
     "minimax": ModelConfig(
         id="minimax/minimax-m2.5",
         label="MiniMax M2.5",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
     ),
     "glm": ModelConfig(
         id="z-ai/glm-5",
         label="GLM 5",
         tier="strong",
         temperature=0.1,
+        max_tokens=8192,
+    ),
+    "claude-sonnet": ModelConfig(
+        id="anthropic/claude-sonnet-4.6",
+        label="Claude Sonnet 4.6",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "gemini-3.1": ModelConfig(
+        id="google/gemini-3.1-pro-preview",
+        label="Gemini 3.1 Pro",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "deepseek": ModelConfig(
+        id="deepseek/deepseek-v3.2",
+        label="DeepSeek V3.2",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "grok": ModelConfig(
+        id="x-ai/grok-4.1-fast",
+        label="Grok 4.1 Fast",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
+    ),
+    "trinity": ModelConfig(
+        id="arcee-ai/trinity-large-preview:free",
+        label="Trinity Large",
+        tier="strong",
+        temperature=0.1,
+        max_tokens=8192,
     ),
 }
 

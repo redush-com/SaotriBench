@@ -22,3 +22,40 @@ run_pipeline(data, steps)
 - Requirements become stricter in later phases
 - New step types and pipeline features may be introduced
 - Output format may evolve
+
+## Algorithm Skeleton
+To help you focus on inferring evolving step execution constraints rather than designing complex data processing loops, you can start with a generic pipeline iterator that applies steps one by one.
+
+```python
+def run_pipeline(data: list[dict], steps: list[dict]) -> dict:
+    import copy
+    
+    current_data = copy.deepcopy(data)
+    errors = []
+    
+    for step in steps:
+        step_type = step.get("type")
+        new_data = []
+        
+        for record in current_data:
+            rec = copy.deepcopy(record)
+            try:
+                if step_type == "rename":
+                    old_name = step.get("from")
+                    new_name = step.get("to")
+                    if old_name in rec:
+                        rec[new_name] = rec.pop(old_name)
+                    new_data.append(rec)
+                elif step_type == "filter":
+                    # Basic filter logic
+                    if rec.get(step.get("field")) == step.get("value"):
+                        new_data.append(rec)
+                else:
+                    new_data.append(rec)
+            except Exception as e:
+                errors.append({"record": record, "error": str(e)})
+                
+        current_data = new_data
+        
+    return {"result": current_data}
+```

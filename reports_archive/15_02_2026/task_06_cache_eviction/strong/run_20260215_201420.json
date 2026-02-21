@@ -1,0 +1,51 @@
+{
+  "model_id": "openai/gpt-5.2-codex",
+  "model_label": "GPT-5.2 Codex",
+  "model_tier": "strong",
+  "task_id": "task_06_cache_eviction",
+  "task_name": "Cache Eviction",
+  "difficulty": "medium",
+  "total_phases": 8,
+  "phases_completed": 4,
+  "total_attempts": 8,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.9
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 29267,
+    "completion_tokens": 10609,
+    "total_tokens": 39876
+  },
+  "total_duration_seconds": 161.50556564331055,
+  "timestamp": "2026-02-15T17:14:20.213381+00:00"
+}

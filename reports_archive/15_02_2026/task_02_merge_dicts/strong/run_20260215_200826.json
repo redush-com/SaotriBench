@@ -1,0 +1,45 @@
+{
+  "model_id": "openai/gpt-5.2-codex",
+  "model_label": "GPT-5.2 Codex",
+  "model_tier": "strong",
+  "task_id": "task_02_merge_dicts",
+  "task_name": "Merge Dictionaries",
+  "difficulty": "easy",
+  "total_phases": 4,
+  "phases_completed": 3,
+  "total_attempts": 5,
+  "final_status": "error",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "failed",
+      "attempts": 2,
+      "coverage": 0.8421052631578947
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 6571,
+    "completion_tokens": 3483,
+    "total_tokens": 10054
+  },
+  "total_duration_seconds": 305.9390251636505,
+  "timestamp": "2026-02-15T17:08:26.186301+00:00"
+}

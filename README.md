@@ -340,14 +340,20 @@ cp agents/.env.example agents/.env
 ### Run benchmark
 
 ```bash
-# Run all 3 models on all tasks
+# Run all models on all tasks (sequential)
 python -m agents.run_benchmark
 
 # Run a specific model tier on a specific task
 python -m agents.run_benchmark --tier strong --task task_00_fizzbuzz
 
-# Run all models on one task
-python -m agents.run_benchmark --task task_00_fizzbuzz
+# Run selected models
+python -m agents.run_benchmark --models claude-opus,gpt,deepseek
+
+# Run models in parallel (up to 4 at a time)
+python -m agents.run_benchmark --models claude-opus,gpt,deepseek --parallel 4
+
+# Run all models in parallel
+python -m agents.run_benchmark --parallel 5
 
 # List configured models
 python -m agents.run_benchmark --list-models
@@ -362,11 +368,15 @@ python -m agents.run_benchmark --list-models
 | `strong` | Claude Sonnet | `anthropic/claude-sonnet-4` |
 | `claude-opus` | Claude Opus 4.6 | `anthropic/claude-opus-4.6` |
 | `gemini-pro` | Gemini 3 Pro | `google/gemini-3-pro-preview` |
-| `grok` | Grok 4 | `x-ai/grok-4` |
 | `kimi` | Kimi K2.5 | `moonshotai/kimi-k2.5` |
 | `gpt` | GPT-5.2 Codex | `openai/gpt-5.2-codex` |
 | `minimax` | MiniMax M2.5 | `minimax/minimax-m2.5` |
 | `glm` | GLM 5 | `z-ai/glm-5` |
+| `claude-sonnet` | Claude Sonnet 4.6 | `anthropic/claude-sonnet-4.6` |
+| `gemini-3.1` | Gemini 3.1 Pro | `google/gemini-3.1-pro-preview` |
+| `deepseek` | DeepSeek V3.2 | `deepseek/deepseek-v3.2` |
+| `grok` | Grok 4.1 Fast | `x-ai/grok-4.1-fast` |
+| `trinity` | Trinity Large | `arcee-ai/trinity-large-preview` |
 
 ### Benchmark Results (Strong Tier, Feb 2026)
 
@@ -382,9 +392,6 @@ python -m agents.run_benchmark --list-models
 | 4 | MiniMax M2.5 | 4/12 | 40/94 | 43% |
 | 5 | Kimi K2.5 | 4/12 | 37/94 | 39% |
 | 6 | Gemini 3 Pro | 4/12 | 32/94 | 34% |
-| 7 | Grok 4* | 0/1 | 1/3 | 33% |
-
-*Grok 4 only completed 1 task due to extreme API latency (~6 min/call). See [TECHNICAL_ERRORS.md](TECHNICAL_ERRORS.md).
 
 #### Per-Task Results (phases completed / total phases)
 

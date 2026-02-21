@@ -1,0 +1,39 @@
+{
+  "model_id": "minimax/minimax-m2.5",
+  "model_label": "MiniMax M2.5",
+  "model_tier": "strong",
+  "task_id": "task_01_transform_list",
+  "task_name": "Transform List",
+  "difficulty": "easy",
+  "total_phases": 3,
+  "phases_completed": 3,
+  "total_attempts": 3,
+  "final_status": "completed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 2069,
+    "completion_tokens": 1342,
+    "total_tokens": 3411
+  },
+  "total_duration_seconds": 43.34321117401123,
+  "timestamp": "2026-02-15T17:15:56.242583+00:00"
+}

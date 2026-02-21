@@ -1,0 +1,27 @@
+{
+  "model_id": "anthropic/claude-opus-4.6",
+  "model_label": "Claude Opus 4.6",
+  "model_tier": "strong",
+  "task_id": "task_06_cache_eviction",
+  "task_name": "Cache Eviction",
+  "difficulty": "medium",
+  "total_phases": 8,
+  "phases_completed": 0,
+  "total_attempts": 0,
+  "final_status": "error",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "failed",
+      "attempts": 0,
+      "coverage": 0.0
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  },
+  "total_duration_seconds": 1.870894193649292,
+  "timestamp": "2026-02-15T13:25:31.957787+00:00"
+}

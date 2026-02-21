@@ -28,4 +28,13 @@ TEST_CASES = [
     TestCase(input=70, expected="BuzzBazz", phase=2, tags=["divisible_by_35"]),
     TestCase(input=105, expected="FizzBuzzBazz", phase=2, tags=["divisible_by_105"]),
     TestCase(input=210, expected="FizzBuzzBazz", phase=2, tags=["divisible_by_105"]),
+
+    # Phase 3 — regression: edge cases (negative numbers, zero)
+    TestCase(input=0, expected="FizzBuzzBazz", phase=3, tags=["zero_case"]),
+    TestCase(input=-3, expected="Fizz", phase=3, tags=["negative_numbers"]),
+    TestCase(input=-5, expected="Buzz", phase=3, tags=["negative_numbers"]),
+    TestCase(input=-7, expected="Bazz", phase=3, tags=["negative_numbers"]),
+    TestCase(input=-15, expected="FizzBuzz", phase=3, tags=["negative_numbers"]),
+    TestCase(input=-105, expected="FizzBuzzBazz", phase=3, tags=["negative_numbers"]),
+    TestCase(input=-4, expected="-4", phase=3, tags=["negative_numbers"]),
 ]

@@ -184,10 +184,7 @@ phases:
     rules:
       - id: "correct_output"
         description: "Resolution matches expected"
-        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution", "lock_preference", "platform_filter", "resolution_metadata"]
-      - id: "correct_error"
-        description: "Raises ValueError on conflicts or cycles"
-        scopes: ["version_conflict", "circular_dependency"]
+        scopes: ["large_registry"]
       - id: "no_mutation"
         description: "Input must not be modified"
         scopes: ["direct"]

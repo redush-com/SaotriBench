@@ -1,0 +1,33 @@
+{
+  "model_id": "google/gemini-3-pro-preview",
+  "model_label": "Gemini 3 Pro",
+  "model_tier": "strong",
+  "task_id": "task_09_schedule_optimizer",
+  "task_name": "Schedule Optimizer",
+  "difficulty": "hard",
+  "total_phases": 12,
+  "phases_completed": 1,
+  "total_attempts": 9,
+  "final_status": "error",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "failed",
+      "attempts": 8,
+      "coverage": 0.75
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 23839,
+    "completion_tokens": 33861,
+    "total_tokens": 57700
+  },
+  "total_duration_seconds": 510.82966661453247,
+  "timestamp": "2026-02-14T22:57:54.502776+00:00"
+}

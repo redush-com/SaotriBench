@@ -1,0 +1,39 @@
+{
+  "model_id": "anthropic/claude-opus-4.6",
+  "model_label": "Claude Opus 4.6",
+  "model_tier": "strong",
+  "task_id": "task_09_schedule_optimizer",
+  "task_name": "Schedule Optimizer",
+  "difficulty": "hard",
+  "total_phases": 12,
+  "phases_completed": 2,
+  "total_attempts": 17,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 8,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "failed",
+      "attempts": 8,
+      "coverage": 0.8
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 212485,
+    "completion_tokens": 22491,
+    "total_tokens": 234976
+  },
+  "total_duration_seconds": 293.86723136901855,
+  "timestamp": "2026-02-15T13:52:24.743762+00:00"
+}

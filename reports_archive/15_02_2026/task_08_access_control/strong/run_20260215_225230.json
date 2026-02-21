@@ -1,0 +1,51 @@
+{
+  "model_id": "minimax/minimax-m2.5",
+  "model_label": "MiniMax M2.5",
+  "model_tier": "strong",
+  "task_id": "task_08_access_control",
+  "task_name": "Access Control",
+  "difficulty": "medium",
+  "total_phases": 10,
+  "phases_completed": 4,
+  "total_attempts": 13,
+  "final_status": "failed",
+  "phase_results": [
+    {
+      "phase_id": 0,
+      "status": "completed",
+      "attempts": 1,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 1,
+      "status": "completed",
+      "attempts": 0,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 2,
+      "status": "completed",
+      "attempts": 2,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 3,
+      "status": "completed",
+      "attempts": 5,
+      "coverage": 1.0
+    },
+    {
+      "phase_id": 4,
+      "status": "failed",
+      "attempts": 5,
+      "coverage": 0.9
+    }
+  ],
+  "token_usage": {
+    "prompt_tokens": 67836,
+    "completion_tokens": 11622,
+    "total_tokens": 79458
+  },
+  "total_duration_seconds": 263.3431308269501,
+  "timestamp": "2026-02-15T19:52:30.584051+00:00"
+}

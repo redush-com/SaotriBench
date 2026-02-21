@@ -130,12 +130,39 @@ class Runner:
         if not self.solution_file.exists():
             self.solution_file.write_text("", encoding="utf-8")
 
+    def _obfuscate_feedback_dict(self, feedback_dict: dict[str, Any]) -> dict[str, Any]:
+        """Obfuscate scope names to prevent solution leakage to the agent."""
+        import copy
+        import hashlib
+        
+        result = copy.deepcopy(feedback_dict)
+        if "violations" not in result:
+            return result
+            
+        for v in result["violations"]:
+            scope = v.get("scope", "")
+            if scope in ["error", "unknown", "consistency", "direct", "ordering", "nested"]:
+                continue
+            
+            # Create a deterministic 6-character hash
+            hash_str = hashlib.md5(scope.encode()).hexdigest()[:6]
+            v["scope"] = f"scope_{hash_str}"
+            
+        return result
+
     def _write_phase_info(
         self,
         phase_transition: bool,
         implicit_feedback: dict[str, Any] | None = None,
     ) -> None:
         """Write current phase information to workspace."""
+        prev_feedback = None
+        if self.previous_feedback:
+            prev_feedback = self._obfuscate_feedback_dict(self.previous_feedback.to_dict())
+
+        if implicit_feedback:
+            implicit_feedback = self._obfuscate_feedback_dict(implicit_feedback)
+
         phase_message = PhaseMessage(
             task_id=self.task_config.id,
             phase_id=self.current_phase.id,
@@ -144,9 +171,7 @@ class Runner:
                 {"id": rule.id, "description": rule.description}
                 for rule in self.current_phase.rules
             ],
-            previous_feedback=(
-                self.previous_feedback.to_dict() if self.previous_feedback else None
-            ),
+            previous_feedback=prev_feedback,
             implicit_evaluation=implicit_feedback,
         )
         self.phase_file.write_text(
@@ -155,8 +180,9 @@ class Runner:
 
     def _write_feedback(self, feedback: Feedback) -> None:
         """Write feedback to workspace."""
+        feedback_dict = self._obfuscate_feedback_dict(feedback.to_dict())
         self.feedback_file.write_text(
-            json.dumps(feedback.to_dict(), indent=2), encoding="utf-8"
+            json.dumps(feedback_dict, indent=2), encoding="utf-8"
         )
 
     def _read_solution(self) -> str:
