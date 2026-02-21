@@ -38,7 +38,7 @@ python -m agents.run_benchmark
 python -m agents.run_benchmark --tier strong --task task_00_fizzbuzz
 ```
 
-Available tiers: `weak`, `medium`, `strong`
+Available tiers: `medium`, `strong`
 
 ### Run all models on one task
 
@@ -71,9 +71,7 @@ If neither is set, the script exits with an error message.
 
 | Tier     | Model           | OpenRouter ID                          |
 |----------|-----------------|----------------------------------------|
-| weak     | Gemma 2 9B      | `google/gemma-2-9b-it`                 |
 | medium   | Llama 3.3 70B   | `meta-llama/llama-3.3-70b-instruct`    |
-| strong   | Claude Sonnet   | `anthropic/claude-sonnet-4`            |
 
 Models are chosen to show clear capability differences across tiers.
 
