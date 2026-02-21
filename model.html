@@ -194,7 +194,7 @@
 <div id="content" class="loading">Loading model data...</div>
 
 <script>
-const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5 };
+const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5, expert: 8 };
 
 function fmt(n, d = 1) { return Number(n).toFixed(d); }
 function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
@@ -235,7 +235,7 @@ function computeInsights(modelData) {
   const modelStats = {};
   for (const m of allData.models) {
     modelStats[m] = { passed: 0, tested: 0, tokens: 0, duration: 0, phases: 0, byDiff: {} };
-    for (const d of ['easy','medium','hard']) modelStats[m].byDiff[d] = { passed: 0, total: 0 };
+    for (const d of ['easy','medium','hard','expert']) modelStats[m].byDiff[d] = { passed: 0, total: 0 };
   }
   for (const r of allData.results) {
     const m = r.model_label;
@@ -259,7 +259,7 @@ function computeInsights(modelData) {
   const insights = { strengths: [], efficiency: [], speed: [], weakSpots: [] };
 
   // Difficulty strengths/weaknesses
-  for (const diff of ['easy', 'medium', 'hard']) {
+  for (const diff of ['easy', 'medium', 'hard', 'expert']) {
     const myD = me.byDiff[diff] || { passed: 0, total: 0 };
     const myRate = myD.total > 0 ? myD.passed / myD.total : 0;
     const avgRates = others.filter(o => o.byDiff[diff]?.total > 0).map(o => o.byDiff[diff].passed / o.byDiff[diff].total);
@@ -418,7 +418,7 @@ function render(modelData) {
   for (const r of results) resultMap[r.task_id] = r;
 
   // Sort tasks: by difficulty order, then task_id
-  const diffOrder = { easy: 0, medium: 1, hard: 2 };
+  const diffOrder = { easy: 0, medium: 1, hard: 2, expert: 3 };
   const sortedTasks = [...allTasks].sort((a, b) => {
     const da = diffOrder[(a.difficulty || 'easy').toLowerCase()] ?? 1;
     const db = diffOrder[(b.difficulty || 'easy').toLowerCase()] ?? 1;

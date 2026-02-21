@@ -114,7 +114,7 @@ function totalTaskCount(data) {
 
 // ── Render: Completion Summary ───────────────────────────
 
-const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5 };
+const DIFF_WEIGHT = { easy: 1, medium: 3, hard: 5, expert: 8 };
 
 function renderSummary(data) {
   if (!data.models || data.models.length === 0) {
@@ -207,7 +207,7 @@ function renderSummary(data) {
   if (incompleteModels.length > 0) {
     html += `<div class="footnote">* Not all tasks tested yet: ${incompleteModels.join(', ')}</div>`;
   }
-  html += `<div class="footnote">Weighted score: easy\u00d71, medium\u00d73, hard\u00d75</div>`;
+  html += `<div class="footnote">Weighted score: easy\u00d71, medium\u00d73, hard\u00d75, expert\u00d78</div>`;
 
   document.getElementById('summaryBadge').textContent = `${rows.length} models`;
   document.getElementById('summaryTable').innerHTML = html;
@@ -263,7 +263,7 @@ function renderDifficulty(data) {
   }
 
   const lookup = buildLookup(data);
-  const difficulties = ['easy', 'medium', 'hard'];
+  const difficulties = ['easy', 'medium', 'hard', 'expert'];
 
   // Group tasks by difficulty
   const tasksByDiff = {};
@@ -338,6 +338,13 @@ async function fetchAndRender() {
     
     // Ensure tasks lists full benchmark suite (fallback if backend not restarted yet)
     if (allTasks && allTasks.length > 0) {
+      // Sort on the client side to guarantee correct linear gradation even without server restart
+      const diffOrder = { easy: 0, medium: 1, hard: 2, expert: 3 };
+      allTasks.sort((a, b) => {
+        const da = diffOrder[(a.difficulty || 'easy').toLowerCase()] ?? 99;
+        const db = diffOrder[(b.difficulty || 'easy').toLowerCase()] ?? 99;
+        return da - db || a.task_id.localeCompare(b.task_id);
+      });
       data.tasks = allTasks;
     }
     
