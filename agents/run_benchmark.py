@@ -58,7 +58,7 @@ def _run_single(
     verbose: bool,
 ) -> RunResult | None:
     """Run a single model on a single task with an isolated workspace."""
-    model_slug = model.id.replace("/", "_")
+    model_slug = model.id.replace("/", "_").replace(":", "_")
     workspace_dir = workspace_base / f"{task_dir.name}_{model_slug}"
 
     try:
