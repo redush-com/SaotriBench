@@ -61,6 +61,27 @@ class OpenRouterClient:
                 "or pass api_key parameter."
             )
         self.timeout = timeout  # Fallback when model has no response_timeout
+        self._headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/saotri-bench",
+            "X-Title": "Saotri Bench Agent",
+        }
+        self._client = httpx.Client(
+            timeout=timeout,
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+            headers=self._headers,
+        )
+
+    def close(self) -> None:
+        """Close the underlying HTTP client."""
+        self._client.close()
+
+    def __enter__(self) -> OpenRouterClient:
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()
 
     def chat(
         self,
@@ -120,21 +141,15 @@ class OpenRouterClient:
             "temperature": model.temperature,
         }
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/saotri-bench",
-            "X-Title": "Saotri Bench Agent",
-        }
-
         # Use model-specific timeout if set, otherwise fall back to client default
         request_timeout = getattr(model, "response_timeout", None) or self.timeout
 
         try:
-            with httpx.Client(timeout=request_timeout) as client:
-                response = client.post(self.BASE_URL, json=payload, headers=headers)
-                response.raise_for_status()
-                data = response.json()
+            response = self._client.post(
+                self.BASE_URL, json=payload, timeout=request_timeout,
+            )
+            response.raise_for_status()
+            data = response.json()
         except httpx.TimeoutException:
             raise ResponseTimeoutError(
                 f"Model {model.id} ({model.label}) exceeded response timeout "
