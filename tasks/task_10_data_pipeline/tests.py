@@ -169,20 +169,7 @@ TEST_CASES = [
 
     # Phase 9 — idempotency tested via deterministic rule (no extra test needed)
 
-    # Phase 10 — performance
-    TestCase(
-        input={
-            "data": [{"id": i, "value": i * 10, "group": f"g{i % 5}"} for i in range(3000)],
-            "steps": [
-                {"type": "filter", "field": "value", "op": ">=", "value": 100},
-                {"type": "rename", "from": "group", "to": "category"},
-            ],
-        },
-        expected={"result": [{"id": i, "value": i * 10, "category": f"g{i % 5}"} for i in range(10, 3000)]},
-        phase=10, tags=["large_pipeline"],
-    ),
-
-    # Phase 11 — observability (metadata in output)
+    # Phase 10 — observability (metadata in output)
     TestCase(
         input={
             "data": [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}],
@@ -202,6 +189,6 @@ TEST_CASES = [
                 "total_records_out": 1,
             },
         },
-        phase=11, tags=["observability"],
+        phase=10, tags=["observability"],
     ),
 ]

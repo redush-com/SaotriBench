@@ -179,25 +179,6 @@ phases:
         description: "Same input always produces same output"
         scopes: ["deterministic_resolve"]
 
-  - id: 14
-    description: "Performance with large registry"
-    rules:
-      - id: "correct_output"
-        description: "Resolution matches expected"
-        scopes: ["exact_match", "range_matching", "transitive", "maximize_version", "prerelease_handling", "optional_deps", "peer_constraint", "backtrack_resolution", "lock_preference", "platform_filter", "resolution_metadata"]
-      - id: "correct_error"
-        description: "Raises ValueError on conflicts or cycles"
-        scopes: ["version_conflict", "circular_dependency"]
-      - id: "no_mutation"
-        description: "Input must not be modified"
-        scopes: ["direct"]
-      - id: "deterministic"
-        description: "Same input always produces same output"
-        scopes: ["deterministic_resolve"]
-      - id: "performance"
-        description: "Handles large registries within time limit"
-        scopes: ["large_registry"]
-
 limits:
   max_attempts_per_phase: 8
   max_total_attempts: 100

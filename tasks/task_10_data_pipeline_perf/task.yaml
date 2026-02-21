@@ -1,0 +1,33 @@
+id: "task_10_data_pipeline_perf"
+name: "Data Pipeline (Performance)"
+description: "Performance testing for data pipeline on large datasets"
+difficulty: "expert"
+
+interface:
+  function_name: "run_pipeline"
+  signature: "def run_pipeline(data: list[dict], steps: list[dict]) -> dict"
+  allowed_imports: ["copy", "collections"]
+
+execution:
+  timeout_seconds: 15
+
+phases:
+  - id: 0
+    description: "Performance with large data"
+    rules:
+      - id: "correct_output"
+        description: "Pipeline output matches expected"
+        scopes: ["large_pipeline"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["idempotent"]
+      - id: "performance"
+        description: "Handles large data within time limit"
+        scopes: ["large_pipeline"]
+
+limits:
+  max_attempts_per_phase: 8
+  max_total_attempts: 20
