@@ -191,4 +191,17 @@ TEST_CASES = [
         },
         phase=10, tags=["observability"],
     ),
+
+    # Phase 11 — performance
+    TestCase(
+        input={
+            "data": [{"id": i, "value": i * 10, "group": f"g{i % 5}"} for i in range(3000)],
+            "steps": [
+                {"type": "filter", "field": "value", "op": ">=", "value": 100},
+                {"type": "rename", "from": "group", "to": "category"},
+            ],
+        },
+        expected={"result": [{"id": i, "value": i * 10, "category": f"g{i % 5}"} for i in range(10, 3000)]},
+        phase=11, tags=["large_pipeline"],
+    ),
 ]

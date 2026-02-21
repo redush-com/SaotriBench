@@ -287,4 +287,14 @@ TEST_CASES = [
     ),
 
     # Phase 13 — deterministic (tested via rule, no extra test case needed)
+
+    # Phase 14 — performance with large registry
+    TestCase(
+        input={
+            "dependencies": {"pkg49": ">=1.0.0, <3.0.0"},
+            "registry": _large_registry(),
+        },
+        expected={f"pkg{i}": "2.4.0" for i in range(50)},  # highest in range for each
+        phase=14, tags=["large_registry"],
+    ),
 ]

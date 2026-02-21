@@ -179,6 +179,22 @@ phases:
         description: "Same input always produces same output"
         scopes: ["deterministic_resolve"]
 
+  - id: 14
+    description: "Performance with large registry"
+    rules:
+      - id: "correct_output"
+        description: "Resolution matches expected"
+        scopes: ["large_registry"]
+      - id: "no_mutation"
+        description: "Input must not be modified"
+        scopes: ["direct"]
+      - id: "deterministic"
+        description: "Same input always produces same output"
+        scopes: ["deterministic_resolve"]
+      - id: "performance"
+        description: "Handles large registries within time limit"
+        scopes: ["large_registry"]
+
 limits:
   max_attempts_per_phase: 8
   max_total_attempts: 100
