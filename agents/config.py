@@ -12,7 +12,7 @@ class ModelConfig:
     id: str  # OpenRouter model ID
     label: str  # Human-readable short name
     tier: str  # "weak", "medium", "strong"
-    max_tokens: int = 4096
+    max_tokens: int = 8192
     temperature: float = 0.2
     response_timeout: float = 120.0  # Max seconds to wait for a single LLM response
 
