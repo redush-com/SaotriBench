@@ -17,7 +17,7 @@ SaotriBench evaluates LLM agents on hidden requirement discovery through iterati
 | Task | Difficulty Label | Completion Rate | Verdict |
 |------|-----------------|-----------------|---------|
 | task_03_validate_brackets | medium | 92% (12/13) | Reference — well-calibrated |
-| task_00_fizzbuzz | easy | 36% (5/14) | Good discriminator |
+| task_00_fizzbuzz | easy | 36% (5/14) | Training data proxy (see §5.15) |
 | task_04_sort_objects | medium | 7% (1/14) | Hard but solvable |
 | task_01_transform_list | easy | 0% (0/14) | Suspect |
 | task_02_merge_dicts | easy | 0% (0/10) | Suspect |
@@ -820,6 +820,330 @@ TransitionAnalysis:
 | Any transition: agent_visible < 0.40 | — | Feedback insufficient |
 | Any transition: feedback_gap > 0.30 | — | Warning: feedback delivery loses significant information |
 | Any transition: structural < 0.40 | — | Task itself may be broken (not just feedback) |
+| Any transition: has unrecoverable info (§5.15) | — | Guessing required — feedback cannot drive discovery |
+
+### 5.15 Information Sufficiency Analysis
+
+#### 5.15.1 Motivation
+
+The dual-mode scoring (§5.9-5.13) quantifies HOW MUCH information is lost between the task structure and the agent's view (`feedback_gap`). But it does not answer a more fundamental question: **does the feedback contain enough information for the agent to LOGICALLY DEDUCE the solution, or must the agent GUESS?**
+
+Example: task_00_fizzbuzz transition 0→1 has `feedback_gap = 0.54`. This tells us information is lost. But the deeper problem is that the word "Bazz" and the number 7 are **completely unrecoverable** from any agent-visible source. No amount of iteration or reasoning can derive "Bazz" from `scope_38a66b`. The 36% success rate on this task comes entirely from models recognizing the classic "FizzBuzzBazz" variant from training data — not from feedback-driven discovery.
+
+This means the benchmark measures **training data contamination** rather than **feedback literacy** for this transition. The Information Sufficiency Analysis detects this automatically.
+
+#### 5.15.2 Three Information Levels
+
+For any phase transition, the agent needs three levels of information to produce the correct solution:
+
+```
+Level A — LOCALIZATION:  Which inputs produce wrong outputs?
+Level B — DIRECTION:     What kind of change is needed? (abs? cap? new branch?)
+Level C — TARGET:        What specific values should appear? (7? "Bazz"? 100?)
+```
+
+Each level can be:
+- **Provided**: agent can derive it from feedback
+- **Constrainable**: agent can narrow to a finite enumerable set
+- **Unrecoverable**: agent must guess from prior knowledge
+
+The benchmark's sweet spot is: **Level A fully provided, Level B partially provided, Level C never directly provided but constrainable.** Currently:
+
+| Level | Current State | Problem |
+|-------|--------------|---------|
+| A (Localization) | Partial — only violation count, no input values | Agent knows HOW MANY tests fail but not WHICH inputs |
+| B (Direction) | Minimal — generic rule descriptions, obfuscated scopes | Agent gets "Output matches expected string" — no signal about WHAT kind of error |
+| C (Target) | None — never provided | Agent cannot derive literal values (string "Bazz", number 7, cap value 100) |
+
+The ideal enrichment target:
+
+```
+Too little info:     [....A(count only)....]  → current state, guessing required
+                                ↓
+Sweet spot:          [AAAAAAA|BBBBB.........]  → enough to discover, not to copy
+                      full A    partial B
+                                ↓
+Trivial:             [AAAAAAA|BBBBBBBBB|CCCC]  → just copying the answer
+```
+
+**Full Level A** means: feedback includes `(input, actual_output)` pairs for failing tests — agent knows exactly which inputs fail and what it currently produces, but NOT what the expected output is.
+
+**Partial Level B** means: feedback includes error classification (sign_flip, over_value, type_mismatch) — agent knows the NATURE of the error but not the exact fix. Alternatively, rule descriptions contain action verbs ("handle negatives", "cap overflow values").
+
+#### 5.15.3 Algorithm: Recoverability Analysis
+
+The algorithm checks whether the key elements of the golden solution change are **recoverable** from agent-visible information sources.
+
+```
+Input: golden_N code, golden_N+1 code, agent-visible info at transition
+Output: InformationSufficiency result
+
+Step 1: Extract new elements from golden_N+1 that are absent in golden_N
+  a. Parse both as AST
+  b. Find new LITERALS: numbers, strings not in golden_N
+     e.g., golden_1 adds literal 7 and string "Bazz"
+  c. Find new FUNCTION CALLS: built-in or imported functions
+     e.g., golden_1 adds call to abs()
+  d. Find new CONTROL FLOW: new if/elif/else branches, new exceptions
+     e.g., golden_3 adds raise ValueError(...)
+
+Step 2: Collect agent-visible information sources
+  a. problem.md full text
+  b. Phase N+1 rule descriptions (from task.yaml)
+  c. Violation details: scope (obfuscated or transparent), count
+  d. Phase description (if passed to agent — currently NOT passed)
+  e. Allowed imports list (from task.yaml)
+
+Step 3: For each new element, check recoverability
+  For each new LITERAL (number or string):
+    - Search all agent-visible sources for exact match
+    - Search problem.md for semantic match (e.g., "7" mentioned in text)
+    - If found → RECOVERABLE
+    - If not found → UNRECOVERABLE (agent must guess this value)
+
+  For each new FUNCTION CALL:
+    - Check if function is in allowed_imports → HINTED (agent sees import is allowed)
+    - Check if function name appears in rule descriptions → RECOVERABLE
+    - Check if the TRANSFORM is in standard catalog AND
+      the scope name (unobfuscated) semantically maps to it → CONSTRAINABLE
+    - Otherwise → UNCONSTRAINED (agent must try many options)
+
+  For each new CONTROL FLOW pattern:
+    - Check if rule description describes the pattern
+      (e.g., "Raises ValueError" → raise statement) → RECOVERABLE
+    - Otherwise → UNCONSTRAINED
+
+Step 4: Compute sufficiency metrics
+  total_new_elements = len(literals) + len(calls) + len(control_flow)
+  recoverable_count = count(RECOVERABLE)
+  constrainable_count = count(CONSTRAINABLE or HINTED)
+  unrecoverable_count = count(UNRECOVERABLE or UNCONSTRAINED)
+
+  info_sufficiency = recoverable_count / max(total_new_elements, 1)
+  has_unrecoverable_literals = any literal is UNRECOVERABLE
+```
+
+**Key rule:** If `has_unrecoverable_literals == True`, the task transition **requires guessing** — the agent must produce a specific value that exists nowhere in its information sources. This is a fundamentally different situation from "feedback is weak but theoretically sufficient."
+
+#### 5.15.4 Search Space Estimation
+
+For each UNRECOVERABLE or UNCONSTRAINED element, estimate the domain size:
+
+| Element Type | Domain | Typical Size |
+|-------------|--------|-------------|
+| Integer literal (unknown range) | Any integer | Infinite |
+| Integer literal (bounded by context) | e.g., divisors of numbers in problem | 10-50 |
+| String literal (arbitrary) | Any string | Infinite |
+| String literal (pattern-constrained) | e.g., FizzBuzz-like words | ~100 |
+| Function call (standard library) | All built-in + allowed import functions | ~50 |
+| Function call (from transform catalog) | Catalog entries | ~25 |
+
+```
+search_space = product(domain_size for each unconstrained element)
+
+# Feasibility check against attempt budget
+budget = max_attempts_per_phase
+feasible = search_space <= budget
+```
+
+For task_00 phase 0→1:
+```
+Unconstrained elements:
+  - Integer literal 7: domain ≈ {7, 8, 9, 10, 11, 13, ...} ≈ 10+ candidates
+  - String literal "Bazz": domain = any string ≈ infinite
+
+search_space = 10 * ∞ = ∞
+budget = 5
+feasible = False → GUESSING_REQUIRED
+```
+
+For task_01 phase 0→1:
+```
+Unconstrained elements:
+  - Function call abs(): domain = transform catalog ≈ 25 candidates
+
+search_space = 25
+budget = 5
+feasible = False, but borderline (5 attempts, 25 options)
+Note: With enriched feedback (input/output pairs), agent could deduce abs()
+  from seeing negative→positive pattern, reducing space to 2 (abs, negate).
+```
+
+For task_03 phase 2→3:
+```
+Recoverable elements:
+  - raise ValueError: explicitly in rule description
+  - "position": explicitly in rule description
+  - Control flow: error handling described by rule
+
+search_space = 1 (deterministic from feedback)
+budget = 5
+feasible = True → no guessing needed
+```
+
+#### 5.15.5 Worked Example: task_00_fizzbuzz Phase 0→1
+
+**Step 1: New elements in golden_1 vs golden_0**
+
+```python
+# golden_0 (phase 0)
+def fizzbuzz(n):
+    if n % 15 == 0: return "FizzBuzz"
+    if n % 3 == 0: return "Fizz"
+    if n % 5 == 0: return "Buzz"
+    return str(n)
+
+# golden_1 (phase 1) — adds:
+    if n % 7 == 0: return "Bazz"     # NEW
+
+New literals: [7, "Bazz"]
+New function calls: []
+New control flow: [if-branch for n % 7]
+```
+
+**Step 2: Agent-visible sources**
+
+```
+problem.md: "...New divisibility rules may be introduced in later phases..."
+  → mentions "divisibility rules" (semantic hint) but no "7", no "Bazz"
+
+Phase 1 rules:
+  correct_output: "Output matches expected string" → generic, no hint
+  correct_type: "Return value must be a string" → no hint
+
+Violations: scope_38a66b (obfuscated "divisible_by_7"), count=3
+  → 0 bits of useful information about 7 or Bazz
+
+Allowed imports: [] → no hints
+```
+
+**Step 3: Recoverability**
+
+```
+Literal 7:
+  - Not in problem.md → not mentioned
+  - Not in rule descriptions → not mentioned
+  - Partially constrainable: agent knows "divisibility rules" from problem.md,
+    and from count=3 could infer a divisor producing 3 multiples in the test range
+    → but test range itself is unknown to agent
+  → UNRECOVERABLE
+
+Literal "Bazz":
+  - Not in any agent-visible source
+  - No pattern to derive it (unlike "Fizz"→3, "Buzz"→5 which are given in phase 0)
+  - Even knowing the divisor is 7, the word is arbitrary
+  → UNRECOVERABLE
+
+Control flow (if n % 7):
+  - Pattern matches existing code (if n % 3, if n % 5)
+  → CONSTRAINABLE (agent can infer structure from existing code pattern)
+```
+
+**Step 4: Sufficiency**
+
+```
+total_new_elements = 3 (literal 7, literal "Bazz", control flow)
+recoverable = 0
+constrainable = 1 (control flow pattern)
+unrecoverable = 2 (literals 7 and "Bazz")
+
+info_sufficiency = 0 / 3 = 0.0
+has_unrecoverable_literals = True → GUESSING_REQUIRED
+
+search_space = ~10 (divisors) * ∞ (strings) = ∞
+budget = 5
+feasible = False
+```
+
+**Conclusion:** task_00 phase 0→1 is classified as `GUESSING_REQUIRED`. Models that solve it do so from training data (FizzBuzzBazz is a well-known variant), not from feedback-driven discovery. The 36% success rate is a measure of training data contamination, not benchmark quality.
+
+#### 5.15.6 Automatic Enrichment Recommendations
+
+When the analysis detects unrecoverable elements, it can automatically suggest enrichments that would make the task solvable without making it trivial:
+
+```
+For each UNRECOVERABLE literal:
+  Recommend: Add (input, actual_output) pairs to violation feedback
+    → Agent sees: "input=7, your_output='7'" — knows WHICH input fails
+    → Agent does NOT see: expected output "Bazz" — must still infer
+
+  Effect on search space:
+    Literal 7: → RECOVERABLE (agent sees input=7 in failing pair)
+    Literal "Bazz": → still UNRECOVERABLE from feedback alone
+      BUT: if agent sees that 7, 14, 49 fail with outputs "7", "14", "49"
+      and knows these are divisibility-related, the word is the only
+      remaining unknown. With 5 attempts, agent can try:
+      "Bazz" (FizzBuzz convention), "Razz", "Jazz", "Bam", "Seven"
+      → search_space reduced to ~5-20 strings (feasible with budget 5 if lucky)
+
+  Better enrichment: Include error classification in violation details
+    → "input=7: value_substitution (string expected, got number-as-string)"
+    → Agent knows the output should be a NON-NUMERIC string for input 7
+    → Combined with FizzBuzz pattern, agent can infer a new "word"
+    → Search space: ~10 plausible words × 1 divisor = ~10 (feasible)
+```
+
+The recommendations follow a principle: **enrich to Level A (full localization) and partial Level B (error direction), never to Level C (target values).**
+
+```python
+def generate_enrichment_recommendations(
+    analysis: InformationSufficiency,
+    golden_n1_code: str,
+) -> list[EnrichmentRecommendation]:
+    """Automatically generate feedback enrichment suggestions."""
+    recommendations = []
+
+    if analysis.has_unrecoverable_literals:
+        recommendations.append(EnrichmentRecommendation(
+            type="add_input_output_pairs",
+            description=(
+                "Include (input, actual_output) pairs in violation feedback. "
+                "This reveals WHICH inputs fail and what the current code produces, "
+                "without revealing expected outputs."
+            ),
+            info_level="A",
+            expected_search_space_reduction=f"from {analysis.search_space} to ~{analysis.search_space_with_localization}",
+        ))
+
+    if analysis.unconstrained_transforms:
+        recommendations.append(EnrichmentRecommendation(
+            type="add_error_classification",
+            description=(
+                "Include error classification (sign_flip, over_value, type_change) "
+                "in violation details. This reveals the NATURE of the error "
+                "without revealing the fix."
+            ),
+            info_level="B",
+            expected_search_space_reduction=f"from {analysis.search_space_with_localization} to ~{analysis.search_space_with_direction}",
+        ))
+
+    if analysis.search_space_with_direction > analysis.budget * 2:
+        recommendations.append(EnrichmentRecommendation(
+            type="add_semantic_scope_hint",
+            description=(
+                "Use transparent or semi-descriptive scope names instead of "
+                "full MD5 obfuscation. E.g., 'new_divisor' instead of 'scope_38a66b'."
+            ),
+            info_level="B",
+        ))
+
+    return recommendations
+```
+
+### 5.16 Pass/Fail Criteria (Updated)
+
+Combined pass/fail criteria for Level 2 including Information Sufficiency:
+
+| Check | Pass | Fail |
+|-------|------|------|
+| All transitions: agent_visible >= 0.70 | Feedback is adequate | — |
+| Any transition: agent_visible 0.40-0.69 | — | Warning: some models will struggle |
+| Any transition: agent_visible < 0.40 | — | Feedback insufficient |
+| Any transition: feedback_gap > 0.30 | — | Warning: feedback delivery loses significant information |
+| Any transition: structural < 0.40 | — | Task itself may be broken (not just feedback) |
+| Any transition: has_unrecoverable_literals | — | **GUESSING_REQUIRED**: solution contains values unrecoverable from feedback |
+| Any transition: info_sufficiency < 0.50 | — | Warning: more than half of new elements are not recoverable |
+| Any transition: search_space > budget * 5 | — | Enumeration infeasible within attempt budget |
 
 ---
 
@@ -1053,19 +1377,28 @@ The final verdict for each task follows this precedence:
  3. If any golden fails its own phase:                      → LIKELY_BROKEN
  4. If any golden does NOT break on next phase:             → LIKELY_BROKEN
  5. If any transition structural_solvability < 0.40:        → STRUCTURALLY_BROKEN
- 6. If any transition agent_visible_solvability < 0.15:     → FEEDBACK_INSUFFICIENT
- 7. If any transition agent_visible_solvability < 0.40:     → FEEDBACK_INSUFFICIENT
- 8. If any per-phase budget ratio < 1.0:                    → BUDGET_TOO_TIGHT
- 9. If total budget ratio < 1.0:                            → BUDGET_TOO_TIGHT
-10. Otherwise:                                              → SOLVABLE
+ 6. If any transition has_unrecoverable_literals:           → GUESSING_REQUIRED
+ 7. If any transition agent_visible_solvability < 0.15:     → FEEDBACK_INSUFFICIENT
+ 8. If any transition agent_visible_solvability < 0.40:     → FEEDBACK_INSUFFICIENT
+ 9. If any per-phase budget ratio < 1.0:                    → BUDGET_TOO_TIGHT
+10. If total budget ratio < 1.0:                            → BUDGET_TOO_TIGHT
+11. Otherwise:                                              → SOLVABLE
 ```
 
-Verdict `STRUCTURALLY_BROKEN` (step 5) is distinct from `FEEDBACK_INSUFFICIENT` (steps 6-7): it means the task itself is poorly designed (not just the feedback delivery). A structural score < 0.40 indicates that even with full knowledge of test cases, the transition is complex and ambiguous.
+**Verdict explanations:**
+
+- `STRUCTURALLY_BROKEN` (step 5): The task itself is poorly designed (not just the feedback delivery). Even with full knowledge of test cases, the transition is complex and ambiguous. A structural score < 0.40 indicates this.
+
+- `GUESSING_REQUIRED` (step 6): The golden solution contains **literal values** (numbers, strings) that are completely absent from all agent-visible information sources. The agent cannot logically deduce these values — success depends on training data familiarity, not feedback-driven discovery. This is a fundamental design issue: the benchmark claims to measure feedback literacy, but this transition actually measures training data contamination. **This is distinct from FEEDBACK_INSUFFICIENT**: a task can have adequate feedback structure (high structural_solvability) yet still require guessing if key literal values are unrecoverable.
+
+- `FEEDBACK_INSUFFICIENT` (steps 7-8): The feedback structure provides too little signal. Unlike GUESSING_REQUIRED, the required changes might be theoretically discoverable but the feedback doesn't guide the agent toward them effectively.
 
 **Additional flags** (non-blocking):
 - `FEEDBACK_GAP_WARN`: Any transition with `feedback_gap > 0.30` (significant information loss in feedback delivery)
 - `BUDGET_WARN`: Any per-phase buffer between 1.0x and 2.0x
 - `DOMAIN_KNOWLEDGE`: Any transition with `catalog_match_count == 0` (transformation not in standard catalog — task may test domain expertise rather than feedback literacy)
+- `TRAINING_DATA_PROXY`: Any transition with `GUESSING_REQUIRED` where the task has >0% completion — success rate measures training data contamination, not benchmark quality
+- `ENRICHMENT_AVAILABLE`: Automatic enrichment recommendations exist (§5.15.6) that could eliminate guessing
 
 ---
 
@@ -1105,6 +1438,57 @@ class DeltaComplexity:
     total_changed_nodes: int
     categories: list[str]          # e.g., ["added_call:abs", "changed_literal:100"]
     delta_simplicity: float        # 0..1, higher = simpler change
+
+
+@dataclass
+class NewElement:
+    """A new code element introduced in golden_N+1 vs golden_N."""
+    element_type: str                          # "literal_int", "literal_str", "function_call", "control_flow"
+    value: str                                 # The literal value, function name, or pattern description
+    recoverability: str                        # "recoverable", "constrainable", "hinted", "unconstrained", "unrecoverable"
+    found_in: str | None                       # Which agent-visible source contains it (or None)
+
+
+@dataclass
+class EnrichmentRecommendation:
+    """Automatic suggestion for improving feedback quality."""
+    type: str                                  # "add_input_output_pairs", "add_error_classification", "add_semantic_scope_hint"
+    description: str                           # Human-readable explanation
+    info_level: str                            # "A" (localization), "B" (direction), "C" (target)
+    expected_search_space_reduction: str | None # e.g., "from ∞ to ~10"
+
+
+@dataclass
+class InformationSufficiency:
+    """Information sufficiency analysis for a phase transition (§5.15)."""
+    from_phase: int
+    to_phase: int
+
+    # New elements in golden_N+1
+    new_literals: list[NewElement]              # New numbers, strings
+    new_function_calls: list[NewElement]        # New function calls (abs, min, etc.)
+    new_control_flow: list[NewElement]          # New if/raise/except patterns
+    total_new_elements: int
+
+    # Recoverability summary
+    recoverable_count: int
+    constrainable_count: int
+    unrecoverable_count: int
+    info_sufficiency: float                    # recoverable / total, 0..1
+
+    # Critical flags
+    has_unrecoverable_literals: bool            # True → GUESSING_REQUIRED
+    unrecoverable_literal_values: list[str]     # The specific values agent can't derive
+
+    # Search space
+    search_space: str                          # Estimated, e.g., "∞", "~25", "1"
+    search_space_with_localization: str         # After Level A enrichment
+    search_space_with_direction: str            # After Level A+B enrichment
+    budget: int                                # max_attempts_per_phase
+    feasible: bool                             # search_space <= budget * 5
+
+    # Enrichment recommendations
+    recommendations: list[EnrichmentRecommendation]
 
 
 @dataclass
@@ -1149,6 +1533,9 @@ class FeedbackAdequacyResult:
     # Derived rating
     structural_rating: str                     # "high" | "medium" | "low" | "none"
     agent_rating: str                          # "high" | "medium" | "low" | "none"
+
+    # Information sufficiency (§5.15)
+    info_sufficiency: InformationSufficiency
 
 
 @dataclass
@@ -1277,6 +1664,61 @@ saotri-bench validate-solvability --task <path> --create-golden  # Scaffold stub
 
 ### 10.3 Human-Readable Output Format
 
+**Example 1: task_00_fizzbuzz — GUESSING_REQUIRED**
+
+```
+=== Solvability Validation: task_00_fizzbuzz ===
+Task: FizzBuzz Extended (easy, 4 phases)
+
+--- Level 1: Static Solvability ---
+  Phase 0: golden/phase_0.py ... PASS (coverage=100%)
+    Breaks on phase 1? YES (coverage=70.0%, scopes: divisible_by_7)
+  Phase 1: golden/phase_1.py ... PASS (coverage=100%)
+    Breaks on phase 2? YES (coverage=57.1%, scopes: divisible_by_21, divisible_by_35, divisible_by_105)
+  Phase 2: golden/phase_2.py ... PASS (coverage=100%)
+    Breaks on phase 3? YES (coverage=76.9%, scopes: negative_numbers, zero_case)
+  Phase 3: golden/phase_3.py ... PASS (coverage=100%)
+  Result: VERIFIED
+
+--- Level 2: Feedback Adequacy ---
+  Transition 0 -> 1:
+    Failing tests: 3 | Error patterns: 1 (value_substitution)
+    Catalog matches: 0 (no standard transform maps "7"->"Bazz")
+    AST delta: 4 nodes (added_compare:Mod, added_literal:7, added_literal:"Bazz")
+    Coverage drop: 0.30 | Signal: 1.0
+
+    Structural solvability:    0.52 (MEDIUM)
+    Agent-visible solvability: 0.18 (LOW)
+    Feedback gap:              0.34
+
+    Information Sufficiency:
+      New literals: 7 (UNRECOVERABLE), "Bazz" (UNRECOVERABLE)
+      New calls: none
+      New control flow: if-branch (CONSTRAINABLE — matches existing pattern)
+      Info sufficiency: 0.33 (1/3 elements recoverable)
+      Search space: INFINITE (arbitrary string literal)
+      GUESSING_REQUIRED: literals 7, "Bazz" absent from all agent-visible sources
+      Enrichment: add (input, actual_output) pairs → space reduces to ~10-20
+
+  ...
+
+=== VERDICT: GUESSING_REQUIRED ===
+Issues:
+  1. Transition 0->1: literals 7 and "Bazz" are completely unrecoverable.
+     Agent sees "scope_38a66b (x3)" — no signal about divisor or output word.
+     36% success rate measures training data familiarity, not feedback literacy.
+Flags:
+  - TRAINING_DATA_PROXY: 36% completion despite GUESSING_REQUIRED
+  - ENRICHMENT_AVAILABLE: add_input_output_pairs would enable localization
+Recommendations:
+  1. Add (input, actual_output) pairs: agent sees "input=7, your_output='7'"
+     → divisor 7 becomes RECOVERABLE, "Bazz" remains unknown but space shrinks
+  2. Use semi-descriptive scope: "new_divisor" instead of "scope_38a66b"
+     → confirms a divisor is needed (Level B: direction)
+```
+
+**Example 2: task_01_transform_list — FEEDBACK_INSUFFICIENT**
+
 ```
 === Solvability Validation: task_01_transform_list ===
 Task: Transform List (easy, 3 phases)
@@ -1300,6 +1742,16 @@ Task: Transform List (easy, 3 phases)
     Agent-visible solvability: 0.15 (LOW)    — agent sees only scope_a1b2c3
     Feedback gap:              0.54          — feedback loses 54% of available info
 
+    Information Sufficiency:
+      New literals: none
+      New calls: abs() (UNCONSTRAINED — 25 catalog candidates, no hint)
+      New control flow: none
+      Info sufficiency: 0.0 (0/1 elements recoverable)
+      Search space: ~25 (transform catalog size)
+      No GUESSING_REQUIRED (no unrecoverable literals — just weak guidance)
+      Enrichment: add (input, actual_output) pairs → agent sees [-3]->[-6]
+        → sign_flip pattern visible → space reduces to 2 (abs, negate)
+
   Transition 1 -> 2:
     Failing tests: 4 | Error patterns: 1 (over_value)
     Catalog matches: cap_100 (1 match)
@@ -1310,9 +1762,17 @@ Task: Transform List (easy, 3 phases)
     Agent-visible solvability: 0.22 (LOW)    — cap value (100) not in feedback
     Feedback gap:              0.56          — feedback loses 56% of available info
 
-  Result: FEEDBACK_INSUFFICIENT
-    Both transitions: agent-visible < 0.40
-    Both transitions: feedback_gap > 0.30
+    Information Sufficiency:
+      New literals: 100 (UNRECOVERABLE — not in any agent-visible source)
+      New calls: min() (UNCONSTRAINED)
+      New control flow: none
+      Info sufficiency: 0.0 (0/2 elements recoverable)
+      Search space: ~25 (transforms) * ~10 (plausible cap values) = ~250
+      GUESSING_REQUIRED for literal 100
+      Enrichment: add (input, actual_output) pairs → agent sees [60]->[120]
+        vs expected [100] → over_value pattern, cap at 100 inferable
+
+  Result: FEEDBACK_INSUFFICIENT (with partial GUESSING_REQUIRED at transition 1->2)
 
 --- Level 3: Budget Adequacy ---
   Phase 0->1: min=2, agent_vis=0.15, mult=3.0x, adjusted=6.0, budget=5  FAIL (0.8x)
@@ -1327,9 +1787,11 @@ Issues:
      Agent sees "scope_a1b2c3" instead of (input=[-3,2], actual=[-6,4], expected=[6,4]).
   2. Transition 1->2: agent-visible=0.22 (LOW). Structural=0.78 (HIGH).
      Gap=0.56 — cap threshold value (100) exists in tests but never reaches agent.
+     GUESSING_REQUIRED: literal 100 unrecoverable from feedback.
   3. Phase 1 budget (5 attempts) below adjusted minimum (6.0) for LOW feedback.
 Flags:
   - FEEDBACK_GAP_WARN: Both transitions lose >30% of structural information.
+  - ENRICHMENT_AVAILABLE: add_input_output_pairs would resolve both transitions
 ```
 
 ### 10.4 --create-golden Output
@@ -1513,6 +1975,30 @@ class SolvabilityValidator:
         """Mode 2: Agent-visible solvability composite score."""
         ...
 
+    # --- Level 2: Information Sufficiency (§5.15) ---
+
+    def _analyze_info_sufficiency(
+        self, golden_n_code: str, golden_n1_code: str, phase_n: Phase, phase_n1: Phase
+    ) -> InformationSufficiency:
+        """Analyze whether the golden solution's changes are recoverable from agent-visible info."""
+        ...
+
+    def _extract_new_elements(self, golden_n_code: str, golden_n1_code: str) -> tuple[list[NewElement], list[NewElement], list[NewElement]]:
+        """Extract new literals, function calls, and control flow from AST diff."""
+        ...
+
+    def _check_recoverability(self, element: NewElement, phase_n1: Phase) -> str:
+        """Check if a new element is recoverable from agent-visible sources."""
+        ...
+
+    def _estimate_search_space(self, elements: list[NewElement]) -> str:
+        """Estimate total search space cardinality for unconstrained elements."""
+        ...
+
+    def _generate_enrichment_recommendations(self, analysis: InformationSufficiency) -> list[EnrichmentRecommendation]:
+        """Generate automatic enrichment suggestions for unrecoverable elements."""
+        ...
+
     # --- Level 3 ---
 
     def validate_level_3(self, l2_results: list[FeedbackAdequacyResult]) -> BudgetAdequacyResult: ...
@@ -1630,18 +2116,30 @@ Both should report `VERIFIED` at Level 1.
 - Implement `_compute_structural_score()` (Mode 1) and `_compute_agent_visible_score()` (Mode 2)
 - Implement `obfuscate_scope()` — replicate Runner obfuscation for Mode 2
 - Implement composite score, feedback_gap, and rating derivation
+- Implement Information Sufficiency Analysis (§5.15):
+  - `_extract_new_elements()` — AST diff to find new literals, function calls, control flow
+  - `_check_recoverability()` — search agent-visible sources for each new element
+  - `_estimate_search_space()` — compute search space cardinality for unconstrained elements
+  - `_generate_enrichment_recommendations()` — automatic suggestions for unrecoverable elements
 - Create golden solutions for task_00_fizzbuzz and task_02_merge_dicts
 
 **Verification:**
 ```
+saotri-bench validate-solvability --task tasks/task_00_fizzbuzz --level 2
+# Expected: GUESSING_REQUIRED (literals 7 and "Bazz" unrecoverable)
+#   Flag: TRAINING_DATA_PROXY (36% completion despite guessing)
+#   Enrichment: "add_input_output_pairs" recommended
+
 saotri-bench validate-solvability --task tasks/task_01_transform_list --level 2
 # Expected: FEEDBACK_INSUFFICIENT (agent_visible < 0.40, feedback_gap > 0.30)
+#   Note: no GUESSING_REQUIRED — abs() is unconstrained but not an unrecoverable literal
 
 saotri-bench validate-solvability --task tasks/task_03_validate_brackets --level 2
 # Expected: SOLVABLE (agent_visible >= 0.70 for most transitions)
+#   Note: rule descriptions provide full recoverability for ValueError transition
 ```
 
-The framework should produce different verdicts for task_01 vs task_03, matching the audit's findings. Additionally, the structural scores should show that task_01 IS structurally sound — the problem is feedback delivery, not task design.
+The framework should produce three distinct verdicts for task_00, task_01, and task_03, each capturing a different failure mode. The Information Sufficiency Analysis adds a critical distinction: task_00 fails because of **unrecoverable literals** (guessing), while task_01 fails because of **weak feedback signal** (insufficient guidance toward the right transform).
 
 ### Phase 3: Level 3 — Budget Analysis (Priority: MEDIUM)
 
@@ -1685,7 +2183,8 @@ saotri-bench validate-solvability --all --tasks-dir tasks
 
 | Audit Issue | How Framework Addresses It |
 |-------------|---------------------------|
-| **Issue 3 (P1):** Insufficient feedback for task_01, task_02 | Level 2 dual-mode analysis: structural_solvability ~0.7 (task IS sound) but agent_visible ~0.15 (feedback delivers almost nothing). The feedback_gap of 0.5+ quantifies exactly how much information is lost. This provides concrete evidence for feedback enrichment — enriching feedback should close the gap and raise agent_visible toward the structural score. |
+| **task_00_fizzbuzz (36% ≠ "good discriminator")** | Information Sufficiency Analysis (§5.15) reveals that literals `7` and `"Bazz"` are **completely unrecoverable** from agent-visible feedback. The 36% success rate measures training data familiarity with the classic FizzBuzzBazz variant, not feedback-driven discovery. Verdict: `GUESSING_REQUIRED` with flag `TRAINING_DATA_PROXY`. Enrichment recommendation: add `(input, actual_output)` pairs to violation feedback — agent would then see `input=7, your_output="7"` (localization) without seeing `expected="Bazz"` (no target leakage). |
+| **Issue 3 (P1):** Insufficient feedback for task_01, task_02 | Level 2 dual-mode analysis: structural_solvability ~0.7 (task IS sound) but agent_visible ~0.15 (feedback delivers almost nothing). The feedback_gap of 0.5+ quantifies exactly how much information is lost. Information Sufficiency adds precision: task_01's `abs()` is an unconstrained transform (not unrecoverable literal), while task_02's merge semantics require guessing sum/concat rules. Enrichment recommendations generated automatically. |
 | **Issue 4 (P2):** task_06 phase 2 difficulty cliff | Level 2 analyzes `ttl_expiry` transition: catalog_match_count likely = 0 (TTL not in standard catalog), flagging DOMAIN_KNOWLEDGE. Level 3 flags budget as tight given low agent-visible score. |
 | **Issue 5 (P2):** Difficulty labels mismatch | Level 1 proves solvability exists. Level 2 structural score shows task_01 IS appropriate for "easy" — the structural complexity is low. The low agent_visible score proves the problem is feedback delivery, not task difficulty. Decision: fix feedback (keep "easy") rather than relabel. |
 | **Issue 6 (P2):** task_05 domain knowledge vs feedback | Level 2 catalog_match_count = 0 for `unicode_combining` transition triggers DOMAIN_KNOWLEDGE flag. This mechanically confirms the task tests prior knowledge (Unicode NFC normalization is not in the standard transformation catalog) rather than feedback literacy. |
@@ -1729,6 +2228,17 @@ saotri-bench validate-solvability --all --tasks-dir tasks
 - [ ] task_01 transitions score agent_visible < 0.40 (low)
 - [ ] task_01 transitions score structural >= 0.60 (proving task is sound, feedback is the issue)
 - [ ] Fully automatic — no manual input or LLM calls required
+
+### Level 2: Information Sufficiency (§5.15)
+- [ ] AST analysis correctly extracts new literals, function calls, and control flow from golden solution diffs
+- [ ] Recoverability check correctly searches all agent-visible sources (problem.md, rule descriptions, scope names, allowed imports)
+- [ ] task_00 phase 0→1 correctly flagged as `GUESSING_REQUIRED` (literals `7` and `"Bazz"` unrecoverable)
+- [ ] task_03 phase 2→3 correctly flagged as fully recoverable (rule description contains "ValueError" and "position")
+- [ ] task_01 phase 0→1: `abs()` classified as unconstrained transform (not unrecoverable literal)
+- [ ] Search space estimation: task_00 phase 0→1 = infinite (arbitrary string); task_03 phase 2→3 = 1 (deterministic)
+- [ ] `TRAINING_DATA_PROXY` flag triggered when task has >0% completion AND `GUESSING_REQUIRED`
+- [ ] Enrichment recommendations generated automatically for transitions with unrecoverable elements
+- [ ] Recommendations never suggest Level C enrichment (revealing expected outputs)
 
 ### Level 3: Budget Adequacy
 - [ ] Budget multipliers derived from agent_visible_solvability scores
