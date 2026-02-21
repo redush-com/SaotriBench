@@ -22,6 +22,10 @@ class ResponseTimeoutError(Exception):
     """Raised when the model exceeds its response time limit."""
 
 
+class CodeExtractionError(Exception):
+    """Raised when no valid python code block can be extracted from the response."""
+
+
 @dataclass
 class LLMResponse:
     """Response from LLM API."""
@@ -214,6 +218,5 @@ class OpenRouterClient:
         if code_lines:
             return "\n".join(code_lines).strip()
 
-        # Last resort: return the whole thing (let evaluator report syntax error
-        # rather than "empty solution" which wastes an attempt with no feedback)
-        return text.strip()
+        # Last resort: raise an exception so it is logged as a formatting failure
+        raise CodeExtractionError(f"Could not extract Python code from response (length: {len(text)})")

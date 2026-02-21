@@ -275,10 +275,26 @@ def run_agent_on_task(
         if verbose:
             print(f"\n  TIMEOUT: {e}")
         final_status = "timeout"
+        current_phase_errors.append({
+            "type": "ResponseTimeoutError",
+            "message": str(e),
+            "attempt": runner.total_attempts,
+            "phase": runner.current_phase.id,
+        })
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         if verbose:
             print(f"\n  AGENT ERROR: {e}")
+            print(error_trace)
         final_status = "error"
+        current_phase_errors.append({
+            "type": type(e).__name__,
+            "message": str(e),
+            "traceback": error_trace,
+            "attempt": runner.total_attempts,
+            "phase": runner.current_phase.id,
+        })
 
     total_duration = time.time() - start_time
 
