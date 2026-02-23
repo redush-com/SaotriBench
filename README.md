@@ -363,11 +363,8 @@ python -m agents.run_benchmark --list-models
 
 | Tier | Model | OpenRouter ID |
 |------|-------|---------------|
-| `weak` | Gemma 2 9B | `google/gemma-2-9b-it` |
 | `medium` | Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct` |
-| `strong` | Claude Sonnet | `anthropic/claude-sonnet-4` |
 | `claude-opus` | Claude Opus 4.6 | `anthropic/claude-opus-4.6` |
-| `gemini-pro` | Gemini 3 Pro | `google/gemini-3-pro-preview` |
 | `kimi` | Kimi K2.5 | `moonshotai/kimi-k2.5` |
 | `gpt` | GPT-5.2 Codex | `openai/gpt-5.2-codex` |
 | `minimax` | MiniMax M2.5 | `minimax/minimax-m2.5` |
@@ -391,24 +388,23 @@ python -m agents.run_benchmark --list-models
 | 3 | GLM 5 | 4/12 | 41/94 | 44% |
 | 4 | MiniMax M2.5 | 4/12 | 40/94 | 43% |
 | 5 | Kimi K2.5 | 4/12 | 37/94 | 39% |
-| 6 | Gemini 3 Pro | 4/12 | 32/94 | 34% |
 
 #### Per-Task Results (phases completed / total phases)
 
-| Task | Difficulty | Claude Opus | GPT-5.2 | GLM 5 | MiniMax | Kimi K2.5 | Gemini 3 |
-|------|-----------|-------------|---------|-------|---------|-----------|----------|
-| FizzBuzz | Easy | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
-| Transform List | Easy | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
-| Merge Dicts | Easy | **4/4** | 3/4 | 3/4 | 3/4 | 3/4 | **4/4** |
-| Validate Brackets | Medium | 5/5 | 5/5 | 5/5 | 5/5 | 5/5 | 5/5 |
-| Sort Objects | Medium | **6/6** | 4/6 | **6/6** | 3/6 | 2/6 | 3/6 |
-| Text Processor | Medium | **4/7** | 3/7 | 3/7 | 2/7 | 2/7 | 3/7 |
-| Cache Eviction | Medium | **4/8** | **4/8** | 2/8 | 2/8 | 2/8 | 2/8 |
-| Expression Parser | Medium | **9/9** | **9/9** | 7/9 | **9/9** | **9/9** | 3/9 |
-| Access Control | Medium | 2/10 | **4/10** | 3/10 | **4/10** | 3/10 | 2/10 |
-| Schedule Optimizer | Hard | 2/12 | 2/12 | 1/12 | 2/12 | 1/12 | 1/12 |
-| Data Pipeline | Hard | 3/12 | 3/12 | 3/12 | 2/12 | 2/12 | 2/12 |
-| Version Resolver | Hard | **8/15** | 2/15 | 2/15 | 2/15 | 2/15 | 1/15 |
+| Task | Difficulty | Claude Opus | GPT-5.2 | GLM 5 | MiniMax | Kimi K2.5 |
+|------|-----------|-------------|---------|-------|---------|-----------|
+| FizzBuzz | Easy | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| Transform List | Easy | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| Merge Dicts | Easy | **4/4** | 3/4 | 3/4 | 3/4 | 3/4 |
+| Validate Brackets | Medium | 5/5 | 5/5 | 5/5 | 5/5 | 5/5 |
+| Sort Objects | Medium | **6/6** | 4/6 | **6/6** | 3/6 | 2/6 |
+| Text Processor | Medium | **4/7** | 3/7 | 3/7 | 2/7 | 2/7 |
+| Cache Eviction | Medium | **4/8** | **4/8** | 2/8 | 2/8 | 2/8 |
+| Expression Parser | Medium | **9/9** | **9/9** | 7/9 | **9/9** | **9/9** |
+| Access Control | Medium | 2/10 | **4/10** | 3/10 | **4/10** | 3/10 |
+| Schedule Optimizer | Hard | 2/12 | 2/12 | 1/12 | 2/12 | 1/12 |
+| Data Pipeline | Hard | 3/12 | 3/12 | 3/12 | 2/12 | 2/12 |
+| Version Resolver | Hard | **8/15** | 2/15 | 2/15 | 2/15 | 2/15 |
 
 **Bold** = best result for that task.
 
